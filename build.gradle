@@ -1,0 +1,101 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+version = "${mod_version}" as Object
+group = "${mod_author}" as Object
+
+java {
+    archivesBaseName = 'thitemstages'
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+}
+
+minecraft {
+    mappings channel: 'official', version: '1.16.5'
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+
+            mods {
+                thitemstages {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+
+            mods {
+                thitemstages {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            args '--mod', 'thitemstages', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+            mods {
+                thitemstages {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+    maven {
+        url "https://cursemaven.com"
+    }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.16.5-36.2.33'
+
+    implementation fg.deobf("curse.maven:ironchests-228756:3543538")
+
+    // Just JEI
+    implementation fg.deobf("curse.maven:jei-238222:3488178")
+}
+
+jar {
+    manifest {
+        attributes([
+                "Specification-Title"     : "${mod_name}",
+                "Specification-Vendor"    : "${mod_author}",
+                "Specification-Version"   : "${mod_version}",
+                "Implementation-Title"    : "${mod_name}",
+                "Implementation-Version"  : project.jar.archiveVersion,
+                "Implementation-Vendor"   : "DecursioTeam",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')

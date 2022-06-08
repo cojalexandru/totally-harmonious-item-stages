@@ -1,0 +1,43 @@
+{
+  "thitemstages.commands.reloadstages": "Successfully reloaded the following stages: %s",
+
+  "thitemstages.commands.liststages": "The following stages are available: %s",
+
+  "thitemstages.commands.addstage.failure.sender": "%s already has the %s stage!",
+  "thitemstages.commands.addstage.failure.target": "You already have the stage you were supposed to receive!",
+
+  "thitemstages.commands.removestage.failure.sender": "%s doesn't have the %s stage!",
+  "thitemstages.commands.removestage.failure.target": "You don't have the stage that was supposed to be removed from you!",
+
+  "thitemstages.commands.addstage.success.sender": "%s has received the %s stage!",
+  "thitemstages.commands.addstage.success.target": "You received the %s stage!",
+
+  "thitemstages.commands.removestage.success.sender": "Removed the %s stage from %s!",
+  "thitemstages.commands.removestage.success.target": "You don't have the %s stage anymore!",
+
+  "thitemstages.commands.addstages.success.sender": "%s has received the %s stages!",
+  "thitemstages.commands.addstages.success.target": "You received the %s stages!",
+
+  "thitemstages.commands.removestages.success.sender": "Removed the %s stages from %s!",
+  "thitemstages.commands.removestages.success.target": "You don't have the %s stages anymore!",
+
+  "thitemstages.commands.check.failure.empty": "%s doesn't have any stages!",
+  "thitemstages.commands.check.success.list": "%s has the following stages: %s!",
+
+  "thitemstages.commands.all.target": "You received all the available stages!",
+  "thitemstages.commands.all.sender": "%s has received all the available stages!",
+
+  "thitemstages.commands.clear.target": "All your stages have been removed!",
+  "thitemstages.commands.clear.sender": "Removed %s stages from %s's stage data!",
+
+  "thitemstages.tooltip.stage.message": "This item is staged to: ",
+  "thitemstages.tooltip.stage.left_bracket": "[",
+  "thitemstages.tooltip.stage.right_bracket": "]",
+  "thitemstages.tooltip.stage.stage": "%s",
+  "thitemstages.tooltip.pickup": "You won't be able to pickup this item!",
+  "thitemstages.tooltip.playerinventory": "This item will be dropped from your inventory!",
+  "thitemstages.tooltip.playerequipment": "This item will be dropped from your equipment slots!",
+  "thitemstages.tooltip.usableitems": "You won't be able to use this item!",
+  "thitemstages.tooltip.usableblocks": "You won't be able to place or use this block!",
+  "thitemstages.tooltip.hideinjei": "This item will be hidden in JEI!"
+}

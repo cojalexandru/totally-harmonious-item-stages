@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[36,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="thitemstages"
+version="0.0.5"
+displayName="T.H.I.S"
+authors="Decursio Team"
+logoFile="thitemstages-logo.png"
+description='''
+Totally Harmonious Item Stages
+'''
+
+[[dependencies.thitemstages]]
+   modId="forge"
+   mandatory=true
+   versionRange="[36,)"
+   ordering="NONE"
+   side="BOTH"
+
+[[dependencies.thitemstages]]
+   modId="minecraft"
+   mandatory=true
+   versionRange="[1.16.5,1.17)"
+   ordering="NONE"
+   side="BOTH"
