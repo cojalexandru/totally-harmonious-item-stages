@@ -39,14 +39,6 @@ public class Events {
 
     private Set<ItemStack> prevInventory;
 
-    private static boolean areCraftingSlotsEmpty(PlayerEntity player) {
-        int emptySlots = 0;
-        for (int i = 0; i <= player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
-            if(player.inventoryMenu.getCraftSlots().getItem(i).isEmpty()) emptySlots++;
-        }
-        return emptySlots == 4;
-    }
-
     @SubscribeEvent
     public void playerContainerOpenEvent(PlayerContainerEvent.Open event) {
         String containerName = event.getContainer().getClass().getName();
@@ -105,7 +97,7 @@ public class Events {
     public void clientInventoryTick(TickEvent.PlayerTickEvent event){
         if(event.side.isClient() || event.player instanceof FakePlayer) return;
         PlayerEntity player = event.player;
-        if(!new HashSet<>(player.inventory.items).equals(prevInventory) || areCraftingSlotsEmpty(player)){
+        if(!new HashSet<>(player.inventory.items).equals(prevInventory) || !player.inventoryMenu.getCraftSlots().isEmpty()){
             Registry.getRestrictions().forEach((s, entityType) -> {
 
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
@@ -119,14 +111,14 @@ public class Events {
                             }
                         }
                     }
-                    if(!hasStage(player, stage) && !RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
-                        if (getContainers(s).contains("thitemstages.inventoryMenu.CraftingGrid")) {
-                            for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
-                                ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
-                                if(checkAllItems(s, item)) {
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                                }
+                }
+                if(!hasStage(player, stage) && !RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
+                    if (getContainers(s).contains("thitemstages.inventoryMenu.CraftingGrid")) {
+                        for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
+                            ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
+                            if(checkAllItems(s, item)) {
+                                player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
+                                InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                             }
                         }
                     }
