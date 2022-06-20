@@ -2,7 +2,6 @@ package com.decursioteam.thitemstages.utils;
 
 import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.THItemStages;
-import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IFutureReloadListener;
 import net.minecraft.resources.IResourceManager;

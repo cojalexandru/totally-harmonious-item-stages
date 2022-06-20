@@ -15,10 +15,10 @@ public class RestrictionCodec {
 
     public static final RestrictionCodec DEFAULT = new RestrictionCodec("error");
 
-
     public static Codec<RestrictionCodec> codec(String name) {
         return RecordCodecBuilder.create(instance -> instance.group(
                 MapCodec.of(Encoder.empty(), Decoder.unit(() -> name)).forGetter(RestrictionCodec::getName),
+                Codec.STRING.fieldOf("stage").orElse("").forGetter(RestrictionCodec::getStage),
                 ResourceLocation.CODEC.listOf().fieldOf("itemList").orElse(ImmutableList.of()).forGetter(RestrictionCodec::getItemList),
                 ResourceLocation.CODEC.listOf().fieldOf("blockList").orElse(ImmutableList.of()).forGetter(RestrictionCodec::getBlockList),
                 ResourceLocation.CODEC.listOf().fieldOf("tagList").orElse(ImmutableList.of()).forGetter(RestrictionCodec::getTagList),
@@ -30,7 +30,9 @@ public class RestrictionCodec {
     }
 
 
+
     protected String name;
+    protected String stage;
     protected final List<ResourceLocation> blockList;
     protected final List<ResourceLocation> itemList;
     protected final List<ResourceLocation> dimensionList;
@@ -39,8 +41,9 @@ public class RestrictionCodec {
     protected final List<String> containerList;
     protected final List<ResourceLocation> exceptionList;
 
-    private RestrictionCodec(String name, List<ResourceLocation> itemList, List<ResourceLocation> blockList, List<ResourceLocation> tagList, List<ResourceLocation> dimensionList, List<String> modList, List<String> containerList, List<ResourceLocation> exceptionList){
+    private RestrictionCodec(String name, String stage, List<ResourceLocation> itemList, List<ResourceLocation> blockList, List<ResourceLocation> tagList, List<ResourceLocation> dimensionList, List<String> modList, List<String> containerList, List<ResourceLocation> exceptionList){
         this.name = name;
+        this.stage = stage;
         this.blockList = blockList;
         this.itemList = itemList;
         this.tagList = tagList;
@@ -69,6 +72,9 @@ public class RestrictionCodec {
         return itemList;
     }
 
+    public String getStage() {
+        return stage;
+    }
     public List<ResourceLocation> getTagList() {
         return tagList;
     }
@@ -101,8 +107,8 @@ public class RestrictionCodec {
 
     public static class Mutable extends RestrictionCodec {
 
-        public Mutable(String name, List<ResourceLocation> itemList, List<ResourceLocation> blockList, List<ResourceLocation> tagList, List<ResourceLocation> dimensionList, List<String> modList,  List<String> containerList, List<ResourceLocation> exceptionList) {
-            super(name, itemList, blockList, tagList, dimensionList, modList, containerList, exceptionList);
+        public Mutable(String name, String stage, List<ResourceLocation> itemList, List<ResourceLocation> blockList, List<ResourceLocation> tagList, List<ResourceLocation> dimensionList, List<String> modList,  List<String> containerList, List<ResourceLocation> exceptionList) {
+            super(name, stage, itemList, blockList, tagList, dimensionList, modList, containerList, exceptionList);
         }
 
         public Mutable(String name) {
@@ -116,7 +122,7 @@ public class RestrictionCodec {
 
         @Override
         public RestrictionCodec toImmutable() {
-            return new RestrictionCodec(this.name, this.itemList, this.blockList, tagList, this.dimensionList, this.modList, this.containerList, this.exceptionList);
+            return new RestrictionCodec(this.name, this.stage, this.itemList, this.blockList, tagList, this.dimensionList, this.modList, this.containerList, this.exceptionList);
         }
     }
 }

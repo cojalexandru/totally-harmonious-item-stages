@@ -19,17 +19,18 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.common.thread.EffectiveSide;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.decursioteam.thitemstages.THItemStages.LOGGER;
 import static com.decursioteam.thitemstages.THItemStages.MOD_ID;
-import static com.decursioteam.thitemstages.utils.ResourceUtil.resourceToIngredient;
+import static com.decursioteam.thitemstages.utils.ResourceUtil.*;
 
 @JeiPlugin
 public class THISJEIPlugin implements IModPlugin {
 
-    private IJeiRuntime jeiRuntime;
     private final List<ItemStack> hiddenItems = new ArrayList<>();
+    private IJeiRuntime jeiRuntime;
 
     public THISJEIPlugin() {
         if(EffectiveSide.get().isClient()){
@@ -69,52 +70,41 @@ public class THISJEIPlugin implements IModPlugin {
 
     private void collectItems(IIngredientManager iIngredientManager) {
         if (jeiRuntime != null && iIngredientManager != null) {
-            PlayerEntity player = Minecraft.getInstance().player;
+            final PlayerEntity player = Minecraft.getInstance().player;
             final IStagesData stageData = StageUtil.getPlayerData(player);
-            assert stageData != null;
-            final ArrayList<String> playerStages = stageData.getStages();
-
-            Registry.getRestrictionsHashSet().forEach((s) -> {
-                if (!playerStages.contains(s) && RestrictionsData.getRestrictionData(s).getSettingsCodec().getHideInJEI()) {
-                    Set<ResourceLocation> itemList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getItemList());
-                    Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                    Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-                    Set<String> modList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getModList());
-                    Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getExceptionList());
-
-                    //Collect ingredients from mod list
-                    if (!modList.isEmpty()) {
-                        for (ItemStack itemStack : iIngredientManager.getAllIngredients(VanillaTypes.ITEM)) {
-                            for (String modID : modList) {
-                                if (Objects.requireNonNull(itemStack.getItem().getRegistryName()).getNamespace().equals(modID) && !exceptionList.contains(itemStack.getItem().getRegistryName())) {
-                                    this.hiddenItems.add(itemStack);
-                                }
+            try {
+                Registry.getRestrictionsHashSet().forEach((s) -> {
+                    String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                    if (!stageData.hasStage(stage) && RestrictionsData.getRestrictionData(s).getSettingsCodec().getHideInJEI()) {
+                        //Collect ingredients from mod list
+                        if (!getMods(s).isEmpty()) {
+                            for (ItemStack itemStack : iIngredientManager.getAllIngredients(VanillaTypes.ITEM)) {
+                                if(checkMod(s, itemStack)) add(itemStack);
                             }
                         }
-                    }
 
-                    if(!tagList.isEmpty()){
-                        for (ItemStack itemStack : iIngredientManager.getAllIngredients(VanillaTypes.ITEM)) {
-                            if(exceptionList.contains(itemStack.getItem().getRegistryName())) return;
-                            for (ResourceLocation tagID : tagList) {
-                                if (itemStack.getItem().getTags().contains(tagID) && !this.hiddenItems.contains(itemStack)) {
-                                    this.hiddenItems.add(itemStack);
-                                }
+                        //Collect ingredients from tag list
+                        if(!getTags(s).isEmpty()) {
+                            for (ItemStack itemStack : iIngredientManager.getAllIngredients(VanillaTypes.ITEM)) {
+                                if(checkTag(s, itemStack)) add(itemStack);
                             }
                         }
-                    }
 
-                    //Collect ingredients from block list
-                    if (!resourceToIngredient(blockList, s).isEmpty() && !resourceToIngredient(blockList, s).containsAll(this.hiddenItems)) {
-                        this.hiddenItems.addAll(resourceToIngredient(blockList, s));
-                    }
+                        //Collect ingredients from block list
+                        if (!resourceToIngredient(getBlocks(s), s).isEmpty()) {
+                            add(resourceToIngredient(getBlocks(s), s));
+                        }
 
-                    //Collect ingredients from item list
-                    if (!resourceToIngredient(itemList, s).isEmpty() && !resourceToIngredient(itemList, s).containsAll(this.hiddenItems)) {
-                        this.hiddenItems.addAll(resourceToIngredient(itemList, s));
+                        //Collect ingredients from item list
+                        if (!resourceToIngredient(getItems(s), s).isEmpty()) {
+                            add(resourceToIngredient(getItems(s), s));
+                        }
                     }
-                }
-            });
+                });
+            }
+            catch (NullPointerException e){
+                //
+            }
         } else if(CommonConfig.debugMode.get()) LOGGER.warn("[T.H.I.S] - Couldn't collect items that are supposed to be hidden in JEI because JEIRuntime or IngredientManager ar missing! ");
     }
 
@@ -123,5 +113,13 @@ public class THISJEIPlugin implements IModPlugin {
             if(CommonConfig.debugMode.get()) LOGGER.warn("[T.H.I.S] - Hiding the following items: " + this.hiddenItems);
             iIngredientManager.removeIngredientsAtRuntime(VanillaTypes.ITEM, this.hiddenItems);
         } else if(CommonConfig.debugMode.get()) LOGGER.warn("[T.H.I.S] - The are no items that are supposed to be hidden in JEI");
+    }
+
+    private void add(ItemStack itemStack) {
+        this.hiddenItems.add(itemStack);
+    }
+
+    private void add(List<ItemStack> itemStacks) {
+        this.hiddenItems.addAll(itemStacks);
     }
 }

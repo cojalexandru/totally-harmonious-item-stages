@@ -7,7 +7,6 @@ public class SettingsCodec {
 
     public static final SettingsCodec DEFAULT = new SettingsCodec("ALWAYS", "", 15,true, false, true, true, false, false, false);
 
-
     public static final Codec<SettingsCodec> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.fieldOf("advancedTooltips").orElse("ALWAYS").forGetter(SettingsCodec::getAdvancedTooltips),
             Codec.STRING.fieldOf("itemTitle").orElse("Unknown Item").forGetter(SettingsCodec::getItemTitle),
@@ -31,6 +30,19 @@ public class SettingsCodec {
     protected final boolean usableItems;
     protected final boolean usableBlocks;
     protected final boolean containerListWhitelist;
+
+    private SettingsCodec(String advancedTooltips, String itemTitle, int pickupDelay, boolean hideInJEI, boolean canPickup, boolean checkPlayerInventory, boolean checkPlayerEquipment, boolean usableItems, boolean usableBlocks, boolean containerListWhitelist){
+        this.advancedTooltips = advancedTooltips;
+        this.itemTitle = itemTitle;
+        this.pickupDelay = pickupDelay;
+        this.hideInJEI = hideInJEI;
+        this.canPickup = canPickup;
+        this.checkPlayerInventory = checkPlayerInventory;
+        this.checkPlayerEquipment = checkPlayerEquipment;
+        this.usableItems = usableItems;
+        this.usableBlocks = usableBlocks;
+        this.containerListWhitelist = containerListWhitelist;
+    }
 
     public String getAdvancedTooltips() {
         return advancedTooltips;
@@ -71,21 +83,6 @@ public class SettingsCodec {
     public boolean getUsableBlocks() {
         return usableBlocks;
     }
-
-    private SettingsCodec(String advancedTooltips, String itemTitle, int pickupDelay, boolean hideInJEI, boolean canPickup, boolean checkPlayerInventory, boolean checkPlayerEquipment, boolean usableItems, boolean usableBlocks, boolean containerListWhitelist){
-        this.advancedTooltips = advancedTooltips;
-        this.itemTitle = itemTitle;
-        this.pickupDelay = pickupDelay;
-        this.hideInJEI = hideInJEI;
-        this.canPickup = canPickup;
-        this.checkPlayerInventory = checkPlayerInventory;
-        this.checkPlayerEquipment = checkPlayerEquipment;
-        this.usableItems = usableItems;
-        this.usableBlocks = usableBlocks;
-        this.containerListWhitelist = containerListWhitelist;
-    }
-
-
 
     public SettingsCodec toImmutable() {
         return this;

@@ -2,7 +2,6 @@ package com.decursioteam.thitemstages.utils;
 
 import com.decursioteam.thitemstages.THItemStages;
 import com.decursioteam.thitemstages.config.CommonConfig;
-import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.StagesData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -11,7 +10,6 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -26,15 +24,12 @@ import static com.decursioteam.thitemstages.THItemStages.LOGGER;
 public class StagesHandler {
 
     private static final Map<UUID, IStagesData> GLOBAL_STAGE_DATA = new HashMap<>();
-
-    public static Set<String> getStages(){
-        Set<String> knownStages = new HashSet<>();
-        RestrictionsData.getRegistry().getRestrictions().forEach((name, data) -> knownStages.add(name));
-        return knownStages;
-    }
-
     @OnlyIn(Dist.CLIENT)
     private static IStagesData clientData;
+
+    public static Set<String> getStages(){
+        return new HashSet<>(CommonConfig.stages.get());
+    }
 
     @SubscribeEvent
     public static void onPlayerLoad(PlayerEvent.LoadFromFile event) {
@@ -48,12 +43,12 @@ public class StagesHandler {
 
                 final CompoundNBT tag = CompressedStreamTools.read(playerFile);
                 playerData.readFromNBT(tag);
-                THItemStages.LOGGER.debug("Loaded {} stages for {}.", playerData.getStages().size(), event.getPlayer().getName());
+                THItemStages.LOGGER.debug("[T.H.I.S] - Loaded {} stages for {}.", playerData.getStages().size(), event.getPlayer().getName().getString());
             }
 
             catch (final IOException e) {
 
-                THItemStages.LOGGER.error("Could not read player data for {}.", event.getPlayer().getName());
+                THItemStages.LOGGER.error("[T.H.I.S] - Could not read player data for {}.", event.getPlayer().getName().getString());
                 THItemStages.LOGGER.catching(e);
             }
         }
@@ -75,7 +70,7 @@ public class StagesHandler {
             if (tag != null) {
                 try {
                     CompressedStreamTools.write(tag, playerFile);
-                    if(CommonConfig.debugMode.get()) LOGGER.info("[T.H.I.S] - Saved {} stages for {}.", playerData.getStages().size(), event.getPlayer().getName());
+                    LOGGER.info("[T.H.I.S] - Saved {} stages for {}.", playerData.getStages().size(), event.getPlayer().getName().getString());
                 }
 
                 catch (final IOException e) {
@@ -91,7 +86,7 @@ public class StagesHandler {
     @SubscribeEvent
     public static void onPlayerLoggedIn (PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
-            if(CommonConfig.debugMode.get()) LOGGER.info("[T.H.I.S] - Syncing {} player data with the client", event.getPlayer().getName());
+            if(CommonConfig.debugMode.get()) LOGGER.info("[T.H.I.S] - Syncing {} player data with the client", event.getPlayer().getName().getString());
             StageUtil.syncPlayer((ServerPlayerEntity) event.getPlayer());
         }
     }

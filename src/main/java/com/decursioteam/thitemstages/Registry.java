@@ -27,7 +27,6 @@ public class Registry {
 
     public static final Gson GSON = new Gson();
     private static final Multimap<String, String> RESTRICTIONS = HashMultimap.create();
-
     public static Set<String> getRestrictionsHashSet() {
         return new HashSet<>(RESTRICTIONS.values());
     }
@@ -36,7 +35,7 @@ public class Registry {
         return RESTRICTIONS;
     }
 
-    public static void registerRestrictionsList(){
+    public static void registerRestrictionsList() {
         RestrictionsData.getRegistry().getRestrictions().forEach((name, data) -> registerRestrictions(name));
     }
 
@@ -45,8 +44,8 @@ public class Registry {
     }
 
     public static void setupRestrictions() {
-        THItemStages.LOGGER.info("Loading Stages...");
-        FileUtils.streamFilesAndParse(createCustomPath("stages"), Registry::parseRestriction, "Could not stream stages!");
+        THItemStages.LOGGER.info("Loading restrictions...");
+        FileUtils.streamFilesAndParse(createCustomPath("restrictions"), Registry::parseRestriction, "Could not stream restrictions!");
 
         RestrictionsData.getRegistry().regenerateCustomRestrictionData();
     }
@@ -65,8 +64,11 @@ public class Registry {
 
 
     private static void createDirectory(Path path, String dirName) {
-        try { Files.createDirectories(path);
+        try {
+            Files.createDirectories(path);
         } catch (FileAlreadyExistsException ignored) { //ignored
-        } catch (IOException e) { THItemStages.LOGGER.error("failed to create \"{}\" directory", dirName);}
+        } catch (IOException e) {
+            THItemStages.LOGGER.error("failed to create \"{}\" directory", dirName);
+        }
     }
 }

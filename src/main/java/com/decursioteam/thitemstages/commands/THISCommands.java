@@ -1,7 +1,6 @@
 package com.decursioteam.thitemstages.commands;
 
 import com.decursioteam.thitemstages.Registry;
-import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.utils.StageUtil;
 import com.decursioteam.thitemstages.utils.StagesHandler;
 import com.mojang.brigadier.Command;
@@ -11,14 +10,15 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
+import net.minecraft.command.arguments.ArgumentTypes;
 import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -30,6 +30,7 @@ public class THISCommands {
 
     public static void init() {
         MinecraftForge.EVENT_BUS.addListener(THISCommands::registerCommands);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(THISCommands::registerArguments);
     }
 
     private static void registerCommands(RegisterCommandsEvent event) {
@@ -42,6 +43,10 @@ public class THISCommands {
         command.then(createInfoCommand("reload", 2, THISCommands::reloadStages));
         command.then(createInfoCommand("info", 2, THISCommands::listStages));
         event.getDispatcher().register(command);
+    }
+
+    private static void registerArguments(FMLCommonSetupEvent EVENT) {
+        ArgumentTypes.register("stage_name", StageArgumentType.class, StageArgumentType.SERIALIZER);
     }
 
     private static LiteralArgumentBuilder<CommandSource> createInfoCommand (String key, int permissions, Command<CommandSource> command) {

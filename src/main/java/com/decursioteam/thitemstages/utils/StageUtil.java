@@ -1,14 +1,12 @@
 package com.decursioteam.thitemstages.utils;
 
 import com.decursioteam.thitemstages.THItemStages;
-import com.decursioteam.thitemstages.datagen.RestrictionsData;
+import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
 import com.decursioteam.thitemstages.events.UpdateStageEvent;
 import com.decursioteam.thitemstages.network.messages.SyncStagesMessage;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.thread.EffectiveSide;
 
@@ -17,18 +15,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 public class StageUtil {
-
-    private static final Predicate<String> STAGE_PATTERN = Pattern.compile("^[a-z0-9_:]*$").asPredicate();
-
-    public static boolean isValidStageName (String stageName) {
-        return STAGE_PATTERN.test(stageName);
-    }
-
-
     public static boolean hasStage (PlayerEntity player, String stage) {
 
         return hasStage(player, getPlayerData(player), stage);
@@ -159,14 +147,12 @@ public class StageUtil {
 
         if (info != null) {
 
-            THItemStages.LOGGER.info("Syncing {} stages for {}.", info.getStages().size(), player.getName());
+            THItemStages.LOGGER.info("[T.H.I.S] - Syncing {} stages for {}.", info.getStages().size(), player.getName().getString());
             THItemStages.NETWORK.sendToPlayer(player, new SyncStagesMessage(info.getStages()));
         }
     }
 
     public static Set<String> getStages(){
-        Set<String> knownStages = new HashSet<>();
-        RestrictionsData.getRegistry().getRestrictions().forEach((name, data) -> knownStages.add(name));
-        return knownStages;
+        return new HashSet<>(CommonConfig.stages.get());
     }
 }

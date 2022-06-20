@@ -1,7 +1,6 @@
 package com.decursioteam.thitemstages.events;
 
 import com.decursioteam.thitemstages.Registry;
-import com.decursioteam.thitemstages.THItemStages;
 import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
@@ -31,96 +30,51 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
+import static com.decursioteam.thitemstages.utils.ResourceUtil.*;
 import static com.decursioteam.thitemstages.utils.StageUtil.hasStage;
 
 public class Events {
 
     private Set<ItemStack> prevInventory;
 
+    private static boolean areCraftingSlotsEmpty(PlayerEntity player) {
+        int emptySlots = 0;
+        for (int i = 0; i <= player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
+            if(player.inventoryMenu.getCraftSlots().getItem(i).isEmpty()) emptySlots++;
+        }
+        return emptySlots == 4;
+    }
+
     @SubscribeEvent
     public void playerContainerOpenEvent(PlayerContainerEvent.Open event) {
         String containerName = event.getContainer().getClass().getName();
         if(CommonConfig.debugMode.get()) event.getPlayer().displayClientMessage(new StringTextComponent(containerName), false);
+
         if(event.getEntity() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
+
             Registry.getRestrictions().forEach((s, entityType) -> {
-                if(!hasStage(player, s)){
-                    Set<String> containerList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getContainerList());
-                    Set<ResourceLocation> itemList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getItemList());
-                    Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-                    Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                    Set<String> modList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getModList());
-                    Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getExceptionList());
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(!hasStage(player, stage)){
+
                     if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()){
-                        if(containerList.contains(containerName)) {
+                        if(getContainers(s).contains(containerName)) {
                             for (ItemStack item : event.getPlayer().inventoryMenu.getItems()) {
-                                //Drop ingredients from mod list
-                                if(!modList.isEmpty()){
-                                    for (String modID : modList) {
-                                        if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID) && !exceptionList.contains(item.getItem().getRegistryName())) {
-                                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                        }
-                                    }
-                                }
-                                if(!tagList.isEmpty()){
-                                    for (ResourceLocation tagID : tagList) {
-                                        if (item.getItem().getTags().contains(tagID) && !exceptionList.contains(item.getItem().getRegistryName())) {
-                                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                        }
-                                    }
-                                }
-
-                                //Drop ingredients from item list
-                                if(itemList.contains(item.getItem().getRegistryName())) {
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
+                                if(checkAllItems(s, item)) {
                                     player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                }
-
-                                //Drop ingredients from block list
-                                if(blockList.contains(item.getItem().getRegistryName())) {
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
+                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                                 }
                             }
                         }
                     }
                     if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()){
-                        if(!containerList.contains(containerName)) {
+                        if(!getContainers(s).contains(containerName)) {
                             for (ItemStack item : event.getPlayer().inventoryMenu.getItems()) {
-                                //Drop ingredients from mod list
-                                if(!modList.isEmpty()){
-                                    for (String modID : modList) {
-                                        if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID) && !exceptionList.contains(item.getItem().getRegistryName())) {
-                                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY() + 0.5, player.getZ() + 0.5, item);
-                                            item.setCount(0);
-                                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                        }
-                                    }
-                                }
-                                if(!tagList.isEmpty()){
-                                    for (ResourceLocation tagID : tagList) {
-                                        if (item.getItem().getTags().contains(tagID) && !exceptionList.contains(item.getItem().getRegistryName())) {
-                                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                        }
-                                    }
-                                }
-
-                                //Drop ingredients from item list
-                                if(itemList.contains(item.getItem().getRegistryName())) {
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
+                                if(checkAllItems(s, item)) {
                                     player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                }
-
-                                //Drop ingredients from block list
-                                if(blockList.contains(item.getItem().getRegistryName())) {
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
+                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                                 }
                             }
                         }
@@ -135,11 +89,10 @@ public class Events {
         if(event.getEntity() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
             Registry.getRestrictions().forEach((s, entityType) -> {
-                if(!RestrictionsData.getRestrictionData(s).getData().getDimensionList().isEmpty() && !hasStage(player, s)){
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(!RestrictionsData.getRestrictionData(s).getData().getDimensionList().isEmpty() && !hasStage(player, stage)){
 
-                    Set<ResourceLocation> dimensionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getDimensionList());
-
-                    if(dimensionList.contains(event.getDimension().location())) {
+                    if(getDimensions(s).contains(event.getDimension().location())) {
                         player.displayClientMessage(new StringTextComponent("You don't have access to this dimension!").withStyle(TextFormatting.RED), true);
                         event.setCanceled(true);
                     }
@@ -148,134 +101,43 @@ public class Events {
         }
     }
 
-    private static boolean areCraftingSlotsEmpty(PlayerEntity player) {
-        for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
-            if(player.inventoryMenu.getCraftSlots().getItem(i).isEmpty()) return true;
-        }
-        return false;
-    }
-
-
     @SubscribeEvent(priority = EventPriority.LOW)
     public void clientInventoryTick(TickEvent.PlayerTickEvent event){
         if(event.side.isClient() || event.player instanceof FakePlayer) return;
         PlayerEntity player = event.player;
         if(!new HashSet<>(player.inventory.items).equals(prevInventory) || areCraftingSlotsEmpty(player)){
             Registry.getRestrictions().forEach((s, entityType) -> {
-                Set<String> containerList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getContainerList());
-                Set<ResourceLocation> itemList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getItemList());
-                Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-                Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                Set<String> modList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getModList());
-                Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getExceptionList());
-                exceptionList.add(new ResourceLocation("minecraft:air"));
 
-                if(!hasStage(player, s) && RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
-                    if(!containerList.contains("thitemstages.inventoryMenu.CraftingGrid")){
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(!hasStage(player, stage) && RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
+                    if(!getContainers(s).contains("thitemstages.inventoryMenu.CraftingGrid")){
                         for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
                             ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
-                            if (exceptionList.contains(item.getItem().getRegistryName())) return;
-                            if(!modList.isEmpty()){
-                                for (String modID : modList) {
-                                    if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                        player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                        InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                                    }
-                                }
-                            }
-
-                            //Drop ingredients from item list
-                            if(itemList.contains(item.getItem().getRegistryName())) {
+                            if(checkAllItems(s, item)) {
                                 player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
                                 InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                            }
-
-                            //Drop ingredients from block list
-                            if(blockList.contains(item.getItem().getRegistryName())) {
-                                player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                            }
-
-                            if(!tagList.isEmpty()){
-                                for (ResourceLocation tagID : tagList) {
-                                    if (item.getItem().getTags().contains(tagID)) {
-                                        InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                        player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                    }
-                                }
                             }
                         }
                     }
-                    if(!hasStage(player, s) && !RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
-                        if (containerList.contains("thitemstages.inventoryMenu.CraftingGrid")) {
+                    if(!hasStage(player, stage) && !RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
+                        if (getContainers(s).contains("thitemstages.inventoryMenu.CraftingGrid")) {
                             for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
                                 ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
-                                if (exceptionList.contains(item.getItem().getRegistryName())) return;
-                                if (!modList.isEmpty()) {
-                                    for (String modID : modList) {
-                                        if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                                        }
-                                    }
-                                }
-
-                                //Drop ingredients from item list
-                                if (itemList.contains(item.getItem().getRegistryName())) {
+                                if(checkAllItems(s, item)) {
                                     player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
                                     InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                                }
-
-                                //Drop ingredients from block list
-                                if (blockList.contains(item.getItem().getRegistryName())) {
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                                }
-
-                                if (!tagList.isEmpty()) {
-                                    for (ResourceLocation tagID : tagList) {
-                                        if (item.getItem().getTags().contains(tagID)) {
-                                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                        }
-                                    }
                                 }
                             }
                         }
                     }
                 }
-                if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerInventory() && !hasStage(player, s)){
+                if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerInventory() && !hasStage(player, stage)){
                     for (ItemStack item : player.inventory.items) {
                         //Drop ingredients from mod list
-                        if (exceptionList.contains(item.getItem().getRegistryName())) return;
-                        if(!modList.isEmpty()){
-                            for (String modID : modList) {
-                                if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory! 1").withStyle(TextFormatting.RED), true);
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                                }
-                            }
-                        }
-
-                        //Drop ingredients from item list
-                        if(itemList.contains(item.getItem().getRegistryName())) {
+                        if (getExceptions(s).contains(item.getItem().getRegistryName())) return;
+                        if(checkAllItems(s, item)) {
                             player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
                             InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                        }
-
-                        //Drop ingredients from block list
-                        if(blockList.contains(item.getItem().getRegistryName())) {
-                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                        }
-
-                        if(!tagList.isEmpty()){
-                            for (ResourceLocation tagID : tagList) {
-                                if (item.getItem().getTags().contains(tagID)) {
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                }
-                            }
                         }
                     }
                 }
@@ -290,46 +152,12 @@ public class Events {
         if(event.getEntityLiving() instanceof PlayerEntity){
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
             Registry.getRestrictions().forEach((s, entityType) -> {
-                if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerEquipment() && !hasStage(player, s)){
-
-                    Set<ResourceLocation> itemList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getItemList());
-                    Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-                    Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                    Set<String> modList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getModList());
-                    Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getExceptionList());
-                    exceptionList.add(new ResourceLocation("minecraft:air"));
-
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerEquipment() && !hasStage(player, stage)){
                     for (ItemStack item : player.inventory.armor) {
-                        //Drop ingredients from mod list
-                        if(!modList.isEmpty()){
-                            for (String modID : modList) {
-                                if (exceptionList.contains(item.getItem().getRegistryName())) return;
-                                if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                                }
-                            }
-                        }
-
-                        //Drop ingredients from block list
-                        if(blockList.contains(item.getItem().getRegistryName())) {
+                        if(checkAllItems(s, item)) {
                             player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
                             InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                        }
-
-                        //Drop ingredients from item list
-                        if(itemList.contains(item.getItem().getRegistryName())) {
-                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                        }
-
-                        if(!tagList.isEmpty()){
-                            for (ResourceLocation tagID : tagList) {
-                                if (item.getItem().getTags().contains(tagID)) {
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, item);
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                }
-                            }
                         }
                     }
                 }
@@ -344,107 +172,27 @@ public class Events {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
             ItemStack item = event.getItem().getItem();
             Registry.getRestrictions().forEach((s, entityType) -> {
-                Set<String> containerList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getContainerList());
-                Set<ResourceLocation> itemList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getItemList());
-                Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-                Set<String> modList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getModList());
-                Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getExceptionList());
-                exceptionList.add(new ResourceLocation("minecraft:air"));
-                if(!hasStage(player, s) && player.containerMenu != player.inventoryMenu) {
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(!hasStage(player, stage) && player.containerMenu != player.inventoryMenu) {
                     if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
-                        if (containerList.contains(player.containerMenu.getClass().getName())) {
-                            //Drop ingredients from mod list
-                            if (!modList.isEmpty()) {
-                                if (exceptionList.contains(item.getItem().getRegistryName())) return;
-                                for (String modID : modList) {
-                                    if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                        event.setCanceled(true);
-                                        event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
-                                    }
-                                }
-                            }
-
-                            if(!tagList.isEmpty()){
-                                for (ResourceLocation tagID : tagList) {
-                                    if (item.getItem().getTags().contains(tagID)) {
-                                        event.setCanceled(true);
-                                        event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());;
-                                    }
-                                }
-                            }
-
-                            //Drop ingredients from block list
-                            if (blockList.contains(item.getItem().getRegistryName())) {
-                                event.setCanceled(true);
-                                event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
-                            }
-
-                            //Drop ingredients from item list
-                            if (itemList.contains(item.getItem().getRegistryName())) {
+                        if (getContainers(s).contains(player.containerMenu.getClass().getName())) {
+                            if(checkAllItems(s, item)) {
                                 event.setCanceled(true);
                                 event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
                             }
                         }
                     }
                     if (RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
-                        if (!containerList.contains(player.containerMenu.getClass().getName())) {
-                            //Drop ingredients from mod list
-                            if (!modList.isEmpty()) {
-                                if (exceptionList.contains(item.getItem().getRegistryName())) return;
-                                for (String modID : modList) {
-                                    if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                        event.setCanceled(true);
-                                        event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());;
-                                    }
-                                }
-                            }
-
-                            if(!tagList.isEmpty()){
-                                for (ResourceLocation tagID : tagList) {
-                                    if (item.getItem().getTags().contains(tagID)) {
-                                        event.setCanceled(true);
-                                        event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());;
-                                    }
-                                }
-                            }
-
-                            //Drop ingredients from block list
-                            if (blockList.contains(item.getItem().getRegistryName())) {
-                                event.setCanceled(true);
-                                event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
-                            }
-
-                            //Drop ingredients from item list
-                            if (itemList.contains(item.getItem().getRegistryName())) {
+                        if (!getContainers(s).contains(player.containerMenu.getClass().getName())) {
+                            if(checkAllItems(s, item)) {
                                 event.setCanceled(true);
                                 event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
                             }
                         }
                     }
                 }
-                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getCanPickup() && !hasStage(player, s)){
-                    //Drop ingredients from mod list
-                    if(!modList.isEmpty()){
-                        if (exceptionList.contains(item.getItem().getRegistryName())) return;
-                        for (String modID : modList) {
-                            if (Objects.requireNonNull(item.getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                event.setCanceled(true);
-                                event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
-                                player.displayClientMessage(new StringTextComponent("You can't pick up this item!").withStyle(TextFormatting.RED), true);
-                            }
-                        }
-                    }
-
-                    //Drop ingredients from block list
-                    if(blockList.contains(item.getItem().getRegistryName())) {
-                        event.setCanceled(true);
-                        event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
-                        player.displayClientMessage(new StringTextComponent("You can't pick up this item!").withStyle(TextFormatting.RED), true);
-                    }
-
-                    //Drop ingredients from item list
-                    if(itemList.contains(item.getItem().getRegistryName())) {
+                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getCanPickup() && !hasStage(player, stage)){
+                    if(checkAllItems(s, item)) {
                         event.setCanceled(true);
                         event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
                         player.displayClientMessage(new StringTextComponent("You can't pick up this item!").withStyle(TextFormatting.RED), true);
@@ -462,49 +210,24 @@ public class Events {
         if (stageData == null) return;
         final ArrayList<String> playerStages = stageData.getStages();
         Registry.getRestrictions().forEach((s, x) -> {
+            String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
             if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getAdvancedTooltips().equals("NONE")) return;
-            if ((RestrictionsData.getRestrictionData(s).getSettingsCodec().getAdvancedTooltips().equals("ADVANCED") && !playerStages.contains(s) && event.getFlags().isAdvanced()) || !playerStages.contains(s) && RestrictionsData.getRestrictionData(s).getSettingsCodec().getAdvancedTooltips().equals("ALWAYS")) {
-                Set<ResourceLocation> itemList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getItemList());
-                Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-                Set<String> modList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getModList());
-                Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getExceptionList());
-                exceptionList.add(new ResourceLocation("minecraft:air"));
+            if ((RestrictionsData.getRestrictionData(s).getSettingsCodec().getAdvancedTooltips().equals("ADVANCED") && !playerStages.contains(stage) && event.getFlags().isAdvanced()) || !playerStages.contains(stage) && RestrictionsData.getRestrictionData(s).getSettingsCodec().getAdvancedTooltips().equals("ALWAYS")) {
                 ItemStack itemStack = null;
                 //Collect ingredients from mod list
-                if(exceptionList.contains(event.getItemStack().getItem().getRegistryName())) return;
-                if(!modList.isEmpty()) {
-                    for (String modID : modList) {
-                        if (Objects.requireNonNull(event.getItemStack().getItem().getRegistryName()).getNamespace().contains(modID)) {
-                            itemStack = event.getItemStack();
-                        }
-                    }
-                }
+                if(getExceptions(s).contains(event.getItemStack().getItem().getRegistryName())) return;
 
-                if(!tagList.isEmpty()) {
-                    for (ResourceLocation tagID : tagList) {
-                        if (event.getItemStack().getItem().getTags().contains(tagID)) {
-                            itemStack = event.getItemStack();
-                        }
-                    }
-                }
-
-                //Collect ingredients from item list
-                if (itemList.contains(event.getItemStack().getItem().getRegistryName())) {
+                if(checkAllItems(s, event.getItemStack())) {
                     itemStack = event.getItemStack();
                 }
 
-                //Collect ingredients from block list
-                if (blockList.contains(event.getItemStack().getItem().getRegistryName())) {
-                    itemStack = event.getItemStack();
-                }
                 if(itemStack != null){
                     if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle().equals("")) {
                         event.getToolTip().set(0, new StringTextComponent(RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle()));
                     }
                     event.getToolTip().add(new TranslationTextComponent("thitemstages.tooltip.stage.message").withStyle(TextFormatting.DARK_PURPLE).withStyle(TextFormatting.BOLD)
                             .append(new TranslationTextComponent("thitemstages.tooltip.stage.left_bracket").withStyle(TextFormatting.BLUE).withStyle(TextFormatting.DARK_PURPLE))
-                            .append(new TranslationTextComponent("thitemstages.tooltip.stage.stage", s).withStyle(TextFormatting.WHITE).withStyle(TextFormatting.BOLD))
+                            .append(new TranslationTextComponent("thitemstages.tooltip.stage.stage", stage).withStyle(TextFormatting.WHITE).withStyle(TextFormatting.BOLD))
                             .append(new TranslationTextComponent("thitemstages.tooltip.stage.right_bracket").withStyle(TextFormatting.BLUE).withStyle(TextFormatting.DARK_PURPLE))
                     );
                     if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getCanPickup()){
@@ -535,18 +258,15 @@ public class Events {
         if(event.getEntityLiving() instanceof PlayerEntity){
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
             Registry.getRestrictions().forEach((s, x) -> {
-                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(player, s)){
-
-                    Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                    Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-
-                    if(blockList.contains(event.getWorld().getBlockState(event.getPos()).getBlock().getRegistryName())){
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(player, stage)){
+                    if(getBlocks(s).contains(event.getWorld().getBlockState(event.getPos()).getBlock().getRegistryName())){
                         event.setCanceled(true);
                         player.displayClientMessage(new StringTextComponent("You can't interact with this block!").withStyle(TextFormatting.RED), true);
                     }
 
-                    if(!tagList.isEmpty()){
-                        for (ResourceLocation tagID : tagList) {
+                    if(!getTags(s).isEmpty()){
+                        for (ResourceLocation tagID : getTags(s)) {
                             if (event.getWorld().getBlockState(event.getPos()).getBlock().getTags().contains(tagID)) {
                                 event.setCanceled(true);
                                 player.displayClientMessage(new StringTextComponent("You can't interact with this block!").withStyle(TextFormatting.RED), true);
@@ -559,45 +279,29 @@ public class Events {
     }
 
     @SubscribeEvent
+    public void onPlayerInteractWithBlock(PlayerInteractEvent.LeftClickBlock event){
+        if(event.getEntityLiving() instanceof PlayerEntity){
+            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+            Registry.getRestrictions().forEach((s, x) -> {
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(player, stage)){
+                    if(checkAllItems(s, new ItemStack(event.getWorld().getBlockState(event.getPos()).getBlock().asItem()))) {
+                        player.displayClientMessage(new StringTextComponent("You won't be able to use this block!").withStyle(TextFormatting.RED), true);
+                    }
+                }
+            });
+        }
+    }
+
+    @SubscribeEvent
     public void onPlayerInteract(LivingAttackEvent event){
         if(event.getSource() != null && event.getSource().getEntity() instanceof PlayerEntity && event.isCancelable() && event.getSource().getEntity() != null && !event.getSource().getEntity().level.isClientSide && !(event.getSource().getEntity() instanceof FakePlayer)){
             PlayerEntity player = (PlayerEntity) event.getSource().getEntity();
             Registry.getRestrictions().forEach((s, x) -> {
-                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, s)){
-
-                    Set<ResourceLocation> itemList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getItemList());
-                    Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-                    Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                    Set<String> modList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getModList());
-                    Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getExceptionList());
-                    exceptionList.add(new ResourceLocation("minecraft:air"));
-
-                    //Drop ingredients from mod list
-                    if (exceptionList.contains(player.getMainHandItem().getItem().getRegistryName())) return;
-                    if(!modList.isEmpty()){
-                        for (String modID : modList) {
-                            if (Objects.requireNonNull(player.getMainHandItem().getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                event.setCanceled(true);
-                                player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
-                            }
-                        }
-                    }
-
-                    if(!tagList.isEmpty()){
-                        for (ResourceLocation tagID : tagList) {
-                            if (player.getMainHandItem().getItem().getTags().contains(tagID)) {
-                                event.setCanceled(true);
-                                player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
-                            }
-                        }
-                    }
-
-                    //Drop ingredients from block list
-                    if(blockList.contains(player.getMainHandItem().getItem().getRegistryName())) {
-                        event.setCanceled(true);
-                        player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
-                    }
-                    if(itemList.contains(player.getMainHandItem().getItem().getRegistryName())){
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, stage)){
+                    if (getExceptions(s).contains(player.getMainHandItem().getItem().getRegistryName())) return;
+                    if(checkAllItems(s, player.getMainHandItem())) {
                         event.setCanceled(true);
                         player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
                     }
@@ -611,41 +315,9 @@ public class Events {
         if(event.isCancelable() && event.getPlayer() != null && !event.getPlayer().level.isClientSide && !(event.getPlayer() instanceof FakePlayer)){
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
             Registry.getRestrictions().forEach((s, x) -> {
-                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, s)){
-
-                    Set<ResourceLocation> itemList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getItemList());
-                    Set<ResourceLocation> blockList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getBlockList());
-                    Set<ResourceLocation> tagList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getTagList());
-                    Set<String> modList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getModList());
-                    Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(s).getData().getExceptionList());
-                    exceptionList.add(new ResourceLocation("minecraft:air"));
-
-                    //Drop ingredients from mod list
-                    if(!modList.isEmpty()){
-                        if (exceptionList.contains(event.getItemStack().getItem().getRegistryName())) return;
-                        for (String modID : modList) {
-                            if (Objects.requireNonNull(event.getItemStack().getItem().getRegistryName()).getNamespace().equals(modID)) {
-                                event.setCanceled(true);
-                                player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
-                            }
-                        }
-                    }
-
-                    if(!tagList.isEmpty()){
-                        for (ResourceLocation tagID : tagList) {
-                            if (event.getItemStack().getItem().getTags().contains(tagID)) {
-                                event.setCanceled(true);
-                                player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
-                            }
-                        }
-                    }
-
-                    //Drop ingredients from block list
-                    if(blockList.contains(event.getItemStack().getItem().getRegistryName())) {
-                        event.setCanceled(true);
-                        player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
-                    }
-                    if(itemList.contains(event.getItemStack().getItem().getRegistryName())){
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, stage)){
+                    if(checkAllItems(s, event.getItemStack())) {
                         event.setCanceled(true);
                         player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
                     }
