@@ -97,6 +97,7 @@ public class Events {
     public void clientInventoryTick(TickEvent.PlayerTickEvent event){
         if(event.side.isClient() || event.player instanceof FakePlayer) return;
         PlayerEntity player = event.player;
+
         if(!new HashSet<>(player.inventory.items).equals(prevInventory) || !player.inventoryMenu.getCraftSlots().isEmpty()){
             Registry.getRestrictions().forEach((s, entityType) -> {
 
@@ -156,7 +157,6 @@ public class Events {
             });
         }
     }
-
 
     @SubscribeEvent
     public void onItemPickupEvent(EntityItemPickupEvent event){

@@ -9,6 +9,7 @@ public class CommonConfig {
     public static final ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
     public static final ForgeConfigSpec config;
     public static ForgeConfigSpec.BooleanValue debugMode;
+    public static ForgeConfigSpec.BooleanValue improvedMobs;
     public static ForgeConfigSpec.ConfigValue<List<String>> stages;
 
 
@@ -18,6 +19,9 @@ public class CommonConfig {
                 .define("stages", new ArrayList<>());
 
         debugMode = builder.comment("Set this value to 'true' whenever you're having issues, this will allow the mod to output everything it tries to do in the log.")
+                .define("debugMode", false);
+
+        improvedMobs = builder.comment("Set this value to 'true' if you want to use the ImprovedMobs integration.")
                 .define("debugMode", false);
         builder.pop();
         config = builder.build();

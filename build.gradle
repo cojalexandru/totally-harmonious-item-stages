@@ -79,7 +79,8 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.2.33'
 
     implementation fg.deobf("curse.maven:ironchests-228756:3543538")
-
+    implementation fg.deobf("curse.maven:improvedmobs-282639:3819748")
+    implementation fg.deobf("curse.maven:tenshilib-312040:3067125")
     // Just JEI
     implementation fg.deobf("curse.maven:jei-238222:3488178")
 }

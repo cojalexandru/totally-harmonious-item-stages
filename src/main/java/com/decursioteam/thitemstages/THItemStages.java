@@ -3,6 +3,7 @@ package com.decursioteam.thitemstages;
 import com.decursioteam.thitemstages.commands.THISCommands;
 import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.events.Events;
+import com.decursioteam.thitemstages.integrations.ImprovedMobs;
 import com.decursioteam.thitemstages.network.ClientPacketHandler;
 import com.decursioteam.thitemstages.network.ServerPacketHandler;
 import com.decursioteam.thitemstages.network.messages.SyncStagesMessage;
@@ -10,6 +11,7 @@ import com.decursioteam.thitemstages.utils.NetworkUtil;
 import com.decursioteam.thitemstages.utils.StagesReload;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -37,6 +39,9 @@ public class THItemStages {
         MinecraftForge.EVENT_BUS.addListener(this::registerReloadListener);
 
         MinecraftForge.EVENT_BUS.register(new Events());
+        if(ModList.get().isLoaded("improvedmobs")) {
+            MinecraftForge.EVENT_BUS.register(new ImprovedMobs());
+        }
     }
 
     private void registerReloadListener(AddReloadListenerEvent event){
