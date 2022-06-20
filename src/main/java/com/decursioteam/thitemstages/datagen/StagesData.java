@@ -1,10 +1,9 @@
 package com.decursioteam.thitemstages.datagen;
 
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -46,19 +45,19 @@ public class StagesData implements IStagesData {
     }
 
     @Override
-    public void readFromNBT (CompoundNBT tag) {
-        final ListNBT list = tag.getList(stagesTag, Constants.NBT.TAG_STRING);
+    public void readFromNBT (CompoundTag tag) {
+        final ListTag list = tag.getList(stagesTag, 8);
         for (int tagIndex = 0; tagIndex < list.size(); tagIndex++) {
             this.addStage(list.getString(tagIndex));
         }
     }
 
     @Override
-    public CompoundNBT writeToNBT () {
-        final CompoundNBT tag = new CompoundNBT();
-        final ListNBT list = new ListNBT();
+    public CompoundTag writeToNBT () {
+        final CompoundTag tag = new CompoundTag();
+        final ListTag list = new ListTag();
         for (final String stage : this.unlockedStages) {
-            list.add(StringNBT.valueOf(stage));
+            list.add(StringTag.valueOf(stage));
         }
         tag.put(stagesTag, list);
         return tag;

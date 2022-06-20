@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.util.JSONUtils;
+import net.minecraft.util.GsonHelper;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 
@@ -51,7 +51,7 @@ public class Registry {
     }
 
     private static void parseRestriction(Reader reader, String name) {
-        JsonObject jsonObject = JSONUtils.fromJson(GSON, reader, JsonObject.class);
+        JsonObject jsonObject = GsonHelper.fromJson(GSON, reader, JsonObject.class);
         name = Codec.STRING.fieldOf("name").orElse(name).codec().fieldOf("Restriction Data").codec().parse(JsonOps.INSTANCE, jsonObject).get().orThrow();
         RestrictionsData.getRegistry().cacheRawRestrictionsData(name.toLowerCase(Locale.ENGLISH).replace(" ", "_"), jsonObject);
     }

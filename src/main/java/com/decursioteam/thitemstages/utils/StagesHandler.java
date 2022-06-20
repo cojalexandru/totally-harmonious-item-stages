@@ -4,9 +4,9 @@ import com.decursioteam.thitemstages.THItemStages;
 import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.StagesData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -41,7 +41,7 @@ public class StagesHandler {
 
             try {
 
-                final CompoundNBT tag = CompressedStreamTools.read(playerFile);
+                final CompoundTag tag = NbtIo.read(playerFile);
                 playerData.readFromNBT(tag);
                 THItemStages.LOGGER.debug("[T.H.I.S] - Loaded {} stages for {}.", playerData.getStages().size(), event.getPlayer().getName().getString());
             }
@@ -65,11 +65,11 @@ public class StagesHandler {
 
             final IStagesData playerData = getPlayerData(playerUUID);
             final File playerFile = getPlayerFile(event.getPlayerDirectory(), event.getPlayerUUID());
-            final CompoundNBT tag = playerData.writeToNBT();
+            final CompoundTag tag = playerData.writeToNBT();
 
             if (tag != null) {
                 try {
-                    CompressedStreamTools.write(tag, playerFile);
+                    NbtIo.write(tag, playerFile);
                     LOGGER.info("[T.H.I.S] - Saved {} stages for {}.", playerData.getStages().size(), event.getPlayer().getName().getString());
                 }
 
@@ -85,9 +85,9 @@ public class StagesHandler {
 
     @SubscribeEvent
     public static void onPlayerLoggedIn (PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getPlayer() instanceof ServerPlayerEntity) {
+        if (event.getPlayer() instanceof ServerPlayer) {
             if(CommonConfig.debugMode.get()) LOGGER.info("[T.H.I.S] - Syncing {} player data with the client", event.getPlayer().getName().getString());
-            StageUtil.syncPlayer((ServerPlayerEntity) event.getPlayer());
+            StageUtil.syncPlayer((ServerPlayer) event.getPlayer());
         }
     }
 

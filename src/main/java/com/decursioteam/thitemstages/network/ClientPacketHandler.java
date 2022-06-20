@@ -5,15 +5,15 @@ import com.decursioteam.thitemstages.datagen.utils.IStagesData;
 import com.decursioteam.thitemstages.events.SyncStagesEvent;
 import com.decursioteam.thitemstages.network.messages.SyncStagesMessage;
 import com.decursioteam.thitemstages.utils.StagesHandler;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
 public class ClientPacketHandler {
 
-    public static SyncStagesMessage decodeStageMessage (PacketBuffer buffer) {
+    public static SyncStagesMessage decodeStageMessage (FriendlyByteBuf buffer) {
         final String[] stageNames = new String[buffer.readInt()];
 
         for (int i = 0; i < stageNames.length; i++) {

@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[36,)"
+loaderVersion="[40,)"
 license="All Rights Reserved"
 
 [[mods]]
@@ -15,13 +15,13 @@ Totally Harmonious Item Stages
 [[dependencies.thitemstages]]
    modId="forge"
    mandatory=true
-   versionRange="[36,)"
+   versionRange="[40,)"
    ordering="NONE"
    side="BOTH"
 
 [[dependencies.thitemstages]]
    modId="minecraft"
    mandatory=true
-   versionRange="[1.16.5,1.17)"
+   versionRange="[1.18.2,1.19)"
    ordering="NONE"
    side="BOTH"

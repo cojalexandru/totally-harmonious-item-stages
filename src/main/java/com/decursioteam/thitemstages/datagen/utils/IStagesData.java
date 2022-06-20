@@ -1,6 +1,6 @@
 package com.decursioteam.thitemstages.datagen.utils;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ public interface IStagesData {
 
     void clear ();
 
-    void readFromNBT (CompoundNBT tag);
+    void readFromNBT (CompoundTag tag);
 
-    CompoundNBT writeToNBT ();
+    CompoundTag writeToNBT ();
 }

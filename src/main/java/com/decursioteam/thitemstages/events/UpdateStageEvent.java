@@ -1,7 +1,7 @@
 package com.decursioteam.thitemstages.events;
 
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.Cancelable;
 
@@ -9,7 +9,7 @@ public class UpdateStageEvent extends PlayerEvent {
 
     private final String stageName;
 
-    public UpdateStageEvent(PlayerEntity player, String stageName) {
+    public UpdateStageEvent(Player player, String stageName) {
 
         super(player);
         this.stageName = stageName;
@@ -23,7 +23,7 @@ public class UpdateStageEvent extends PlayerEvent {
     @Cancelable
     public static class Add extends UpdateStageEvent {
 
-        public Add(PlayerEntity player, String stageName) {
+        public Add(Player player, String stageName) {
 
             super(player, stageName);
         }
@@ -31,7 +31,7 @@ public class UpdateStageEvent extends PlayerEvent {
 
     public static class Added extends UpdateStageEvent {
 
-        public Added(PlayerEntity player, String stageName) {
+        public Added(Player player, String stageName) {
 
             super(player, stageName);
         }
@@ -40,7 +40,7 @@ public class UpdateStageEvent extends PlayerEvent {
     @Cancelable
     public static class Remove extends UpdateStageEvent {
 
-        public Remove(PlayerEntity player, String stageName) {
+        public Remove(Player player, String stageName) {
 
             super(player, stageName);
         }
@@ -48,7 +48,7 @@ public class UpdateStageEvent extends PlayerEvent {
 
     public static class Removed extends UpdateStageEvent {
 
-        public Removed(PlayerEntity player, String stageName) {
+        public Removed(Player player, String stageName) {
 
             super(player, stageName);
         }
@@ -59,7 +59,7 @@ public class UpdateStageEvent extends PlayerEvent {
 
         private final IStagesData stageData;
 
-        public Cleared(PlayerEntity player, IStagesData stageData) {
+        public Cleared(Player player, IStagesData stageData) {
 
             super(player);
 
@@ -78,7 +78,7 @@ public class UpdateStageEvent extends PlayerEvent {
 
         private boolean hasStage;
 
-        public Check(PlayerEntity player, String stageName, boolean hasStage) {
+        public Check(Player player, String stageName, boolean hasStage) {
 
             super(player, stageName);
             this.hasStageOriginal = hasStage;

@@ -11,13 +11,13 @@ import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.event.RecipesUpdatedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.fml.common.thread.EffectiveSide;
+import net.minecraftforge.fml.util.thread.EffectiveSide;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +70,7 @@ public class THISJEIPlugin implements IModPlugin {
 
     private void collectItems(IIngredientManager iIngredientManager) {
         if (jeiRuntime != null && iIngredientManager != null) {
-            final PlayerEntity player = Minecraft.getInstance().player;
+            final Player player = Minecraft.getInstance().player;
             final IStagesData stageData = StageUtil.getPlayerData(player);
             try {
                 Registry.getRestrictionsHashSet().forEach((s) -> {

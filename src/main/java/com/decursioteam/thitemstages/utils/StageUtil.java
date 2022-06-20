@@ -5,10 +5,10 @@ import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
 import com.decursioteam.thitemstages.events.UpdateStageEvent;
 import com.decursioteam.thitemstages.network.messages.SyncStagesMessage;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.thread.EffectiveSide;
+import net.minecraftforge.fml.util.thread.EffectiveSide;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -17,12 +17,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class StageUtil {
-    public static boolean hasStage (PlayerEntity player, String stage) {
+    public static boolean hasStage (Player player, String stage) {
 
         return hasStage(player, getPlayerData(player), stage);
     }
 
-    public static boolean hasStage (PlayerEntity player, @Nullable IStagesData data, String stage) {
+    public static boolean hasStage (Player player, @Nullable IStagesData data, String stage) {
 
         if (data != null) {
 
@@ -34,49 +34,49 @@ public class StageUtil {
         return false;
     }
 
-    public static boolean hasAnyOf (PlayerEntity player, String... stages) {
+    public static boolean hasAnyOf (Player player, String... stages) {
 
         return hasAnyOf(player, getPlayerData(player), stages);
     }
 
-    public static boolean hasAnyOf (PlayerEntity player, Collection<String> stages) {
+    public static boolean hasAnyOf (Player player, Collection<String> stages) {
 
         return hasAnyOf(player, getPlayerData(player), stages);
     }
 
-    public static boolean hasAnyOf (PlayerEntity player, @Nullable IStagesData data, Collection<String> stages) {
+    public static boolean hasAnyOf (Player player, @Nullable IStagesData data, Collection<String> stages) {
 
         return stages.stream().anyMatch(stage -> hasStage(player, data, stage));
     }
 
-    public static boolean hasAnyOf (PlayerEntity player, @Nullable IStagesData data, String... stages) {
+    public static boolean hasAnyOf (Player player, @Nullable IStagesData data, String... stages) {
 
         return Arrays.stream(stages).anyMatch(stage -> hasStage(player, data, stage));
     }
 
-    public static boolean hasAllOf (PlayerEntity player, String... stages) {
+    public static boolean hasAllOf (Player player, String... stages) {
 
         return hasAllOf(player, getPlayerData(player), stages);
     }
 
-    public static boolean hasAllOf (PlayerEntity player, Collection<String> stages) {
+    public static boolean hasAllOf (Player player, Collection<String> stages) {
 
         return hasAllOf(player, getPlayerData(player), stages);
     }
 
-    public static boolean hasAllOf (PlayerEntity player, @Nullable IStagesData data, Collection<String> stages) {
+    public static boolean hasAllOf (Player player, @Nullable IStagesData data, Collection<String> stages) {
 
         return stages.stream().allMatch(stage -> hasStage(player, data, stage));
     }
 
 
-    public static boolean hasAllOf (PlayerEntity player, @Nullable IStagesData data, String... stages) {
+    public static boolean hasAllOf (Player player, @Nullable IStagesData data, String... stages) {
 
         return Arrays.stream(stages).allMatch(stage -> hasStage(player, data, stage));
     }
 
 
-    public static void addStage (ServerPlayerEntity player, String stage) {
+    public static void addStage (ServerPlayer player, String stage) {
 
         if (!MinecraftForge.EVENT_BUS.post(new UpdateStageEvent.Add(player, stage))) {
 
@@ -91,7 +91,7 @@ public class StageUtil {
         }
     }
 
-    public static void removeStage (ServerPlayerEntity player, String stage) {
+    public static void removeStage (ServerPlayer player, String stage) {
 
         if (!MinecraftForge.EVENT_BUS.post(new UpdateStageEvent.Remove(player, stage))) {
 
@@ -106,7 +106,7 @@ public class StageUtil {
         }
     }
 
-    public static int clearStages (ServerPlayerEntity player) {
+    public static int clearStages (ServerPlayer player) {
 
         final IStagesData stageInfo = StageUtil.getPlayerData(player);
 
@@ -123,11 +123,11 @@ public class StageUtil {
     }
 
     @Nullable
-    public static IStagesData getPlayerData (PlayerEntity player) {
+    public static IStagesData getPlayerData (Player player) {
 
         if (player != null) {
 
-            if (player instanceof ServerPlayerEntity) {
+            if (player instanceof ServerPlayer) {
 
                 return StagesHandler.getPlayerData(player.getUUID());
             }
@@ -141,7 +141,7 @@ public class StageUtil {
         return null;
     }
 
-    public static void syncPlayer (ServerPlayerEntity player) {
+    public static void syncPlayer (ServerPlayer player) {
 
         final IStagesData info = StageUtil.getPlayerData(player);
 

@@ -5,15 +5,15 @@ import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
 import com.decursioteam.thitemstages.utils.StageUtil;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Containers;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.FakePlayer;
@@ -39,21 +39,13 @@ public class Events {
 
     private Set<ItemStack> prevInventory;
 
-    private static boolean areCraftingSlotsEmpty(PlayerEntity player) {
-        int emptySlots = 0;
-        for (int i = 0; i <= player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
-            if(player.inventoryMenu.getCraftSlots().getItem(i).isEmpty()) emptySlots++;
-        }
-        return emptySlots == 4;
-    }
-
     @SubscribeEvent
     public void playerContainerOpenEvent(PlayerContainerEvent.Open event) {
         String containerName = event.getContainer().getClass().getName();
-        if(CommonConfig.debugMode.get()) event.getPlayer().displayClientMessage(new StringTextComponent(containerName), false);
+        if(CommonConfig.debugMode.get()) event.getPlayer().displayClientMessage(new TextComponent(containerName), false);
 
-        if(event.getEntity() instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
+        if(event.getEntity() instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) event.getEntity();
 
             Registry.getRestrictions().forEach((s, entityType) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
@@ -63,8 +55,8 @@ public class Events {
                         if(getContainers(s).contains(containerName)) {
                             for (ItemStack item : event.getPlayer().inventoryMenu.getItems()) {
                                 if(checkAllItems(s, item)) {
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
+                                    player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                                    Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                                 }
                             }
                         }
@@ -73,8 +65,8 @@ public class Events {
                         if(!getContainers(s).contains(containerName)) {
                             for (ItemStack item : event.getPlayer().inventoryMenu.getItems()) {
                                 if(checkAllItems(s, item)) {
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
+                                    player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                                    Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                                 }
                             }
                         }
@@ -86,14 +78,14 @@ public class Events {
 
     @SubscribeEvent
     public void entityTravelToDimension(EntityTravelToDimensionEvent event) {
-        if(event.getEntity() instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
+        if(event.getEntity() instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) event.getEntity();
             Registry.getRestrictions().forEach((s, entityType) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
                 if(!RestrictionsData.getRestrictionData(s).getData().getDimensionList().isEmpty() && !hasStage(player, stage)){
 
                     if(getDimensions(s).contains(event.getDimension().location())) {
-                        player.displayClientMessage(new StringTextComponent("You don't have access to this dimension!").withStyle(TextFormatting.RED), true);
+                        player.displayClientMessage(new TextComponent("You don't have access to this dimension!").withStyle(ChatFormatting.RED), true);
                         event.setCanceled(true);
                     }
                 }
@@ -104,8 +96,8 @@ public class Events {
     @SubscribeEvent(priority = EventPriority.LOW)
     public void clientInventoryTick(TickEvent.PlayerTickEvent event){
         if(event.side.isClient() || event.player instanceof FakePlayer) return;
-        PlayerEntity player = event.player;
-        if(!new HashSet<>(player.inventory.items).equals(prevInventory) || areCraftingSlotsEmpty(player)){
+        Player player = event.player;
+        if(!new HashSet<>(player.inventoryMenu.getItems()).equals(prevInventory) || !player.inventoryMenu.getCraftSlots().isEmpty()){
             Registry.getRestrictions().forEach((s, entityType) -> {
 
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
@@ -114,50 +106,50 @@ public class Events {
                         for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
                             ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
                             if(checkAllItems(s, item)) {
-                                player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
+                                player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                                Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                             }
                         }
                     }
-                    if(!hasStage(player, stage) && !RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
-                        if (getContainers(s).contains("thitemstages.inventoryMenu.CraftingGrid")) {
-                            for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
-                                ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
-                                if(checkAllItems(s, item)) {
-                                    player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                                    InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
-                                }
+                }
+                if(!hasStage(player, stage) && !RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
+                    if (getContainers(s).contains("thitemstages.inventoryMenu.CraftingGrid")) {
+                        for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
+                            ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
+                            if(checkAllItems(s, item)) {
+                                player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                                Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                             }
                         }
                     }
                 }
                 if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerInventory() && !hasStage(player, stage)){
-                    for (ItemStack item : player.inventory.items) {
+                    for (ItemStack item : player.inventoryMenu.getItems()) {
                         //Drop ingredients from mod list
                         if (getExceptions(s).contains(item.getItem().getRegistryName())) return;
                         if(checkAllItems(s, item)) {
-                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
+                            player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                            Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                         }
                     }
                 }
             });
-            prevInventory = new HashSet<>(player.inventory.items);
+            prevInventory = new HashSet<>(player.inventoryMenu.getItems());
         }
     }
 
     @SubscribeEvent
     public void onEquipmentChange(LivingEquipmentChangeEvent event){
         if(event.getEntityLiving().getCommandSenderWorld().isClientSide()) return;
-        if(event.getEntityLiving() instanceof PlayerEntity){
-            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+        if(event.getEntityLiving() instanceof Player){
+            Player player = (Player) event.getEntityLiving();
             Registry.getRestrictions().forEach((s, entityType) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
                 if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerEquipment() && !hasStage(player, stage)){
-                    for (ItemStack item : player.inventory.armor) {
+                    for (ItemStack item : player.getArmorSlots()) {
                         if(checkAllItems(s, item)) {
-                            player.displayClientMessage(new StringTextComponent("Unavailable items were dropped from your inventory!").withStyle(TextFormatting.RED), true);
-                            InventoryHelper.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
+                            player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                            Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                         }
                     }
                 }
@@ -168,8 +160,8 @@ public class Events {
 
     @SubscribeEvent
     public void onItemPickupEvent(EntityItemPickupEvent event){
-        if(event.getEntityLiving() instanceof PlayerEntity){
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
+        if(event.getEntityLiving() instanceof Player){
+            ServerPlayer player = (ServerPlayer) event.getEntityLiving();
             ItemStack item = event.getItem().getItem();
             Registry.getRestrictions().forEach((s, entityType) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
@@ -195,7 +187,7 @@ public class Events {
                     if(checkAllItems(s, item)) {
                         event.setCanceled(true);
                         event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
-                        player.displayClientMessage(new StringTextComponent("You can't pick up this item!").withStyle(TextFormatting.RED), true);
+                        player.displayClientMessage(new TextComponent("You can't pick up this item!").withStyle(ChatFormatting.RED), true);
                     }
                 }
             });
@@ -205,7 +197,7 @@ public class Events {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onItemTooltip(ItemTooltipEvent event){
-        PlayerEntity player = Minecraft.getInstance().player;
+        Player player = Minecraft.getInstance().player;
         final IStagesData stageData = StageUtil.getPlayerData(player);
         if (stageData == null) return;
         final ArrayList<String> playerStages = stageData.getStages();
@@ -223,30 +215,30 @@ public class Events {
 
                 if(itemStack != null){
                     if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle().equals("")) {
-                        event.getToolTip().set(0, new StringTextComponent(RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle()));
+                        event.getToolTip().set(0, new TextComponent(RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle()));
                     }
-                    event.getToolTip().add(new TranslationTextComponent("thitemstages.tooltip.stage.message").withStyle(TextFormatting.DARK_PURPLE).withStyle(TextFormatting.BOLD)
-                            .append(new TranslationTextComponent("thitemstages.tooltip.stage.left_bracket").withStyle(TextFormatting.BLUE).withStyle(TextFormatting.DARK_PURPLE))
-                            .append(new TranslationTextComponent("thitemstages.tooltip.stage.stage", stage).withStyle(TextFormatting.WHITE).withStyle(TextFormatting.BOLD))
-                            .append(new TranslationTextComponent("thitemstages.tooltip.stage.right_bracket").withStyle(TextFormatting.BLUE).withStyle(TextFormatting.DARK_PURPLE))
+                    event.getToolTip().add(new TranslatableComponent("thitemstages.tooltip.stage.message").withStyle(ChatFormatting.DARK_PURPLE).withStyle(ChatFormatting.BOLD)
+                            .append(new TranslatableComponent("thitemstages.tooltip.stage.left_bracket").withStyle(ChatFormatting.BLUE).withStyle(ChatFormatting.DARK_PURPLE))
+                            .append(new TranslatableComponent("thitemstages.tooltip.stage.stage", stage).withStyle(ChatFormatting.WHITE).withStyle(ChatFormatting.BOLD))
+                            .append(new TranslatableComponent("thitemstages.tooltip.stage.right_bracket").withStyle(ChatFormatting.BLUE).withStyle(ChatFormatting.DARK_PURPLE))
                     );
                     if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getCanPickup()){
-                        event.getToolTip().add(new TranslationTextComponent("thitemstages.tooltip.pickup").withStyle(TextFormatting.WHITE));
+                        event.getToolTip().add(new TranslatableComponent("thitemstages.tooltip.pickup").withStyle(ChatFormatting.WHITE));
                     }
                     if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerInventory()){
-                        event.getToolTip().add(new TranslationTextComponent("thitemstages.tooltip.playerinventory").withStyle(TextFormatting.WHITE));
+                        event.getToolTip().add(new TranslatableComponent("thitemstages.tooltip.playerinventory").withStyle(ChatFormatting.WHITE));
                     }
                     if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerEquipment()){
-                        event.getToolTip().add(new TranslationTextComponent("thitemstages.tooltip.playerequipment").withStyle(TextFormatting.WHITE));
+                        event.getToolTip().add(new TranslatableComponent("thitemstages.tooltip.playerequipment").withStyle(ChatFormatting.WHITE));
                     }
                     if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems()){
-                        event.getToolTip().add(new TranslationTextComponent("thitemstages.tooltip.usableitems").withStyle(TextFormatting.WHITE));
+                        event.getToolTip().add(new TranslatableComponent("thitemstages.tooltip.usableitems").withStyle(ChatFormatting.WHITE));
                     }
                     if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks()){
-                        event.getToolTip().add(new TranslationTextComponent("thitemstages.tooltip.usableblocks").withStyle(TextFormatting.WHITE));
+                        event.getToolTip().add(new TranslatableComponent("thitemstages.tooltip.usableblocks").withStyle(ChatFormatting.WHITE));
                     }
                     if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getHideInJEI()){
-                        event.getToolTip().add(new TranslationTextComponent("thitemstages.tooltip.hideinjei").withStyle(TextFormatting.WHITE));
+                        event.getToolTip().add(new TranslatableComponent("thitemstages.tooltip.hideinjei").withStyle(ChatFormatting.WHITE));
                     }
                 }
             }
@@ -255,21 +247,25 @@ public class Events {
 
     @SubscribeEvent
     public void onPlayerInteractWithBlock(PlayerInteractEvent.RightClickBlock event){
-        if(event.getEntityLiving() instanceof PlayerEntity){
-            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+        if(event.getEntityLiving() instanceof Player){
+            Player player = (Player) event.getEntityLiving();
+            Set<ResourceLocation> blockTags = new HashSet<>();
+            event.getWorld().getBlockState(event.getPos()).getTags().forEach(tag -> {
+                blockTags.add(tag.location());
+            });
             Registry.getRestrictions().forEach((s, x) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
                 if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(player, stage)){
                     if(getBlocks(s).contains(event.getWorld().getBlockState(event.getPos()).getBlock().getRegistryName())){
                         event.setCanceled(true);
-                        player.displayClientMessage(new StringTextComponent("You can't interact with this block!").withStyle(TextFormatting.RED), true);
+                        player.displayClientMessage(new TextComponent("You can't interact with this block!").withStyle(ChatFormatting.RED), true);
                     }
 
                     if(!getTags(s).isEmpty()){
                         for (ResourceLocation tagID : getTags(s)) {
-                            if (event.getWorld().getBlockState(event.getPos()).getBlock().getTags().contains(tagID)) {
+                            if (blockTags.contains(tagID)) {
                                 event.setCanceled(true);
-                                player.displayClientMessage(new StringTextComponent("You can't interact with this block!").withStyle(TextFormatting.RED), true);
+                                player.displayClientMessage(new TextComponent("You can't interact with this block!").withStyle(ChatFormatting.RED), true);
                             }
                         }
                     }
@@ -280,13 +276,13 @@ public class Events {
 
     @SubscribeEvent
     public void onPlayerInteractWithBlock(PlayerInteractEvent.LeftClickBlock event){
-        if(event.getEntityLiving() instanceof PlayerEntity){
-            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+        if(event.getEntityLiving() instanceof Player){
+            Player player = (Player) event.getEntityLiving();
             Registry.getRestrictions().forEach((s, x) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
                 if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(player, stage)){
                     if(checkAllItems(s, new ItemStack(event.getWorld().getBlockState(event.getPos()).getBlock().asItem()))) {
-                        player.displayClientMessage(new StringTextComponent("You won't be able to use this block!").withStyle(TextFormatting.RED), true);
+                        player.displayClientMessage(new TextComponent("You won't be able to use this block!").withStyle(ChatFormatting.RED), true);
                     }
                 }
             });
@@ -295,15 +291,15 @@ public class Events {
 
     @SubscribeEvent
     public void onPlayerInteract(LivingAttackEvent event){
-        if(event.getSource() != null && event.getSource().getEntity() instanceof PlayerEntity && event.isCancelable() && event.getSource().getEntity() != null && !event.getSource().getEntity().level.isClientSide && !(event.getSource().getEntity() instanceof FakePlayer)){
-            PlayerEntity player = (PlayerEntity) event.getSource().getEntity();
+        if(event.getSource() != null && event.getSource().getEntity() instanceof Player && event.isCancelable() && event.getSource().getEntity() != null && !event.getSource().getEntity().level.isClientSide && !(event.getSource().getEntity() instanceof FakePlayer)){
+            Player player = (Player) event.getSource().getEntity();
             Registry.getRestrictions().forEach((s, x) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
                 if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, stage)){
                     if (getExceptions(s).contains(player.getMainHandItem().getItem().getRegistryName())) return;
                     if(checkAllItems(s, player.getMainHandItem())) {
                         event.setCanceled(true);
-                        player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
+                        player.displayClientMessage(new TextComponent("You can't interact with this item!").withStyle(ChatFormatting.RED), true);
                     }
                 }
             });
@@ -313,13 +309,13 @@ public class Events {
     @SubscribeEvent
     public void onPlayerInteract(PlayerInteractEvent event){
         if(event.isCancelable() && event.getPlayer() != null && !event.getPlayer().level.isClientSide && !(event.getPlayer() instanceof FakePlayer)){
-            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+            Player player = (Player) event.getEntityLiving();
             Registry.getRestrictions().forEach((s, x) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
                 if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, stage)){
                     if(checkAllItems(s, event.getItemStack())) {
                         event.setCanceled(true);
-                        player.displayClientMessage(new StringTextComponent("You can't interact with this item!").withStyle(TextFormatting.RED), true);
+                        player.displayClientMessage(new TextComponent("You can't interact with this item!").withStyle(ChatFormatting.RED), true);
                     }
                 }
             });

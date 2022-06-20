@@ -2,22 +2,22 @@ package com.decursioteam.thitemstages.utils;
 
 import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.THItemStages;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IFutureReloadListener;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-public class StagesReload implements IFutureReloadListener {
+public class StagesReload implements PreparableReloadListener {
 
     @Override
-    public CompletableFuture<Void> reload(IStage p_215226_1_, IResourceManager p_215226_2_, IProfiler p_215226_3_, IProfiler p_215226_4_, Executor p_215226_5_, Executor p_215226_6_) {
-        return CompletableFuture.completedFuture(null).thenCompose(p_215226_1_::wait).thenAcceptAsync(x -> {
+    public CompletableFuture<Void> reload(PreparationBarrier p_10638_, ResourceManager p_10639_, ProfilerFiller p_10640_, ProfilerFiller p_10641_, Executor p_10642_, Executor p_10643_) {
+        return CompletableFuture.completedFuture(null).thenCompose(p_10638_::wait).thenAcceptAsync(x -> {
             Registry.setupRestrictions();
             Registry.registerRestrictionsList();
-            THItemStages.LOGGER.info(new TranslationTextComponent("thitemstages.commands.reloadstages", StagesHandler.getStages()));
-        }, p_215226_5_);
+            THItemStages.LOGGER.info(new TranslatableComponent("thitemstages.commands.reloadstages", StagesHandler.getStages()));
+        }, p_10642_);
     }
 }

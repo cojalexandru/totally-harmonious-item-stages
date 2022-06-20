@@ -2,8 +2,8 @@ package com.decursioteam.thitemstages.utils;
 
 import com.decursioteam.thitemstages.THItemStages;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
@@ -73,11 +73,13 @@ public class ResourceUtil {
     }
 
     public static boolean checkTag(String restriction, ItemStack itemStack) {
+        Set<ResourceLocation> itemTags = new HashSet<>();
+        itemStack.getTags().forEach(s -> {
+            itemTags.add(s.location());
+        });
         if(!getTags(restriction).isEmpty() && !getExceptions(restriction).contains(itemStack.getItem().getRegistryName())){
             for (ResourceLocation tagID : getTags(restriction)) {
-                if (itemStack.getItem().getTags().contains(tagID)) {
-                    return true;
-                }
+                if(itemTags.contains(tagID)) return true;
             }
         }
         return false;

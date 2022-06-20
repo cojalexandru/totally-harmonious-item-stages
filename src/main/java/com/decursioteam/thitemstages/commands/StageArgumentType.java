@@ -1,16 +1,18 @@
 package com.decursioteam.thitemstages.commands;
 
 import com.decursioteam.thitemstages.utils.StageUtil;
+import com.google.gson.JsonObject;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.command.arguments.ArgumentSerializer;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.synchronization.ArgumentSerializer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.GsonHelper;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -26,7 +28,7 @@ public class StageArgumentType implements ArgumentType<String> {
         KNOWN_STAGES = StageUtil.getStages();
     }
 
-    public static String getStage(CommandContext<CommandSource> ctx, String name) throws CommandSyntaxException {
+    public static String getStage(CommandContext<CommandSourceStack> ctx, String name) throws CommandSyntaxException {
         return ctx.getArgument(name, String.class);
     }
 
@@ -40,26 +42,28 @@ public class StageArgumentType implements ArgumentType<String> {
         return "stage";
     }
 
+
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> ctx, SuggestionsBuilder builder) {
-        return ISuggestionProvider.suggest(KNOWN_STAGES, builder);
+        return SharedSuggestionProvider.suggest(KNOWN_STAGES, builder);
     }
 
-    static class Serializer extends ArgumentSerializer<StageArgumentType> {
-
-        private Serializer() {
-            super(StageArgumentType::new);
-        }
+    static class Serializer implements ArgumentSerializer<StageArgumentType> {
 
         @Override
-        public void serializeToNetwork (StageArgumentType arg, PacketBuffer buffer) {
+        public void serializeToNetwork (StageArgumentType arg, FriendlyByteBuf buffer) {
             buffer.writeUtf(arg.KNOWN_STAGES.toString());
         }
 
         @Override
-        public StageArgumentType deserializeFromNetwork (PacketBuffer buffer) {
-            final StageArgumentType argType = super.deserializeFromNetwork(buffer);
+        public StageArgumentType deserializeFromNetwork (FriendlyByteBuf buffer) {
+            final StageArgumentType argType = new StageArgumentType();
             argType.KNOWN_STAGES = Arrays.stream(buffer.readUtf().replaceAll("\\s", "").replaceAll("[\\[\\]]", "").split(",")).collect(Collectors.toSet());
             return argType;
+        }
+
+        @Override
+        public void serializeToJson(StageArgumentType p_121577_, JsonObject p_121578_) {
+            p_121578_.add("known_stages", GsonHelper.parse(p_121577_.KNOWN_STAGES.toString()));
         }
     }
 }

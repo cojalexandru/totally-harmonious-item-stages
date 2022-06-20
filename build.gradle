@@ -15,11 +15,11 @@ group = "${mod_author}" as Object
 
 java {
     archivesBaseName = 'thitemstages'
-    toolchain.languageVersion = JavaLanguageVersion.of(8)
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
 }
 
 minecraft {
-    mappings channel: 'official', version: '1.16.5'
+    mappings channel: 'official', version: '1.18.2'
 
     runs {
         client {
@@ -76,12 +76,12 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.16.5-36.2.33'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.1.0'
 
-    implementation fg.deobf("curse.maven:ironchests-228756:3543538")
+    //implementation fg.deobf("curse.maven:ironchests-228756:3795374")
 
     // Just JEI
-    implementation fg.deobf("curse.maven:jei-238222:3488178")
+    implementation fg.deobf("curse.maven:jei-238222:3788739")
 }
 
 jar {
