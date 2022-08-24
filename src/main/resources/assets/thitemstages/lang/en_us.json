@@ -39,5 +39,13 @@
   "thitemstages.tooltip.playerequipment": "This item will be dropped from your equipment slots!",
   "thitemstages.tooltip.usableitems": "You won't be able to use this item!",
   "thitemstages.tooltip.usableblocks": "You won't be able to place or use this block!",
-  "thitemstages.tooltip.hideinjei": "This item will be hidden in JEI!"
+  "thitemstages.tooltip.hideinjei": "This item will be hidden in JEI!",
+
+  "thitemstages.screen.unavailable.items.dropped.message": "Unavailable items were dropped from your inventory!",
+  "thitemstages.screen.unavailable.items.pickup.message": "You can't pick up this item!",
+  "thitemstages.screen.unavailable.dimension.message": "You don't have access to this dimension!"
+
+
+
+
 }

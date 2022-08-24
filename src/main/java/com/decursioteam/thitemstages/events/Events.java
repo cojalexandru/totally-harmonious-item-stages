@@ -55,7 +55,7 @@ public class Events {
                         if(getContainers(s).contains(containerName)) {
                             for (ItemStack item : event.getPlayer().inventoryMenu.getItems()) {
                                 if(checkAllItems(s, item)) {
-                                    player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                                    player.displayClientMessage(new TranslatableComponent("thitemstages.screen.unavailable.items.dropped.message").withStyle(ChatFormatting.RED), true);
                                     Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                                 }
                             }
@@ -65,7 +65,7 @@ public class Events {
                         if(!getContainers(s).contains(containerName)) {
                             for (ItemStack item : event.getPlayer().inventoryMenu.getItems()) {
                                 if(checkAllItems(s, item)) {
-                                    player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                                    player.displayClientMessage(new TextComponent("thitemstages.screen.unavailable.items.dropped.message").withStyle(ChatFormatting.RED), true);
                                     Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                                 }
                             }
@@ -85,7 +85,7 @@ public class Events {
                 if(!RestrictionsData.getRestrictionData(s).getData().getDimensionList().isEmpty() && !hasStage(player, stage)){
 
                     if(getDimensions(s).contains(event.getDimension().location())) {
-                        player.displayClientMessage(new TextComponent("You don't have access to this dimension!").withStyle(ChatFormatting.RED), true);
+                        player.displayClientMessage(new TranslatableComponent("thitemstages.screen.unavailable.dimension.message").withStyle(ChatFormatting.RED), true);
                         event.setCanceled(true);
                     }
                 }
@@ -106,7 +106,7 @@ public class Events {
                         for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
                             ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
                             if(checkAllItems(s, item)) {
-                                player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                                player.displayClientMessage(new TextComponent("thitemstages.screen.unavailable.items.dropped.message").withStyle(ChatFormatting.RED), true);
                                 Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                             }
                         }
@@ -117,7 +117,7 @@ public class Events {
                         for (int i = 0; i < player.inventoryMenu.getCraftSlots().getContainerSize(); i++) {
                             ItemStack item = player.inventoryMenu.getCraftSlots().getItem(i);
                             if(checkAllItems(s, item)) {
-                                player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                                player.displayClientMessage(new TextComponent("thitemstages.screen.unavailable.items.dropped.message").withStyle(ChatFormatting.RED), true);
                                 Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                             }
                         }
@@ -128,7 +128,7 @@ public class Events {
                         //Drop ingredients from mod list
                         if (getExceptions(s).contains(item.getItem().getRegistryName())) return;
                         if(checkAllItems(s, item)) {
-                            player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                            player.displayClientMessage(new TextComponent("thitemstages.screen.unavailable.items.dropped.message").withStyle(ChatFormatting.RED), true);
                             Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                         }
                     }
@@ -148,7 +148,7 @@ public class Events {
                 if(RestrictionsData.getRestrictionData(s).getSettingsCodec().getCheckPlayerEquipment() && !hasStage(player, stage)){
                     for (ItemStack item : player.getArmorSlots()) {
                         if(checkAllItems(s, item)) {
-                            player.displayClientMessage(new TextComponent("Unavailable items were dropped from your inventory!").withStyle(ChatFormatting.RED), true);
+                            player.displayClientMessage(new TextComponent("thitemstages.screen.unavailable.items.dropped.message").withStyle(ChatFormatting.RED), true);
                             Containers.dropItemStack(player.getCommandSenderWorld(), player.getX(), player.getY(), player.getZ(), item);
                         }
                     }
@@ -187,7 +187,7 @@ public class Events {
                     if(checkAllItems(s, item)) {
                         event.setCanceled(true);
                         event.getItem().setPickUpDelay(RestrictionsData.getRestrictionData(s).getSettingsCodec().getPickupDelay());
-                        player.displayClientMessage(new TextComponent("You can't pick up this item!").withStyle(ChatFormatting.RED), true);
+                        player.displayClientMessage(new TranslatableComponent("thitemstages.screen.unavailable.items.pickup.message").withStyle(ChatFormatting.RED), true);
                     }
                 }
             });

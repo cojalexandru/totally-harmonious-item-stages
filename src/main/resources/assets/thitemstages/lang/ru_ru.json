@@ -1,0 +1,49 @@
+{
+  "thitemstages.commands.reloadstages": "Успешная перезагрузка следующих этапов: %s",
+
+  "thitemstages.commands.liststages": "Доступны следующие этапы: %s",
+
+  "thitemstages.commands.addstage.failure.sender": "%s уже имеет %s стадию!",
+  "thitemstages.commands.addstage.failure.target": "У вас уже есть стадия, которую вы должны были получить!",
+
+  "thitemstages.commands.removestage.failure.sender": "%s не имеете %s стадию!",
+  "thitemstages.commands.removestage.failure.target": "У вас нет стадии, которую вы хотите удалить!",
+
+  "thitemstages.commands.addstage.success.sender": "%s получил %s стадию!",
+  "thitemstages.commands.addstage.success.target": "Вы получили %s стадию!",
+
+  "thitemstages.commands.removestage.success.sender": "Убрана %s стадия с %s!",
+  "thitemstages.commands.removestage.success.target": "У вас больше нет %s стадии!",
+
+  "thitemstages.commands.addstages.success.sender": "%s получил %s стадии!",
+  "thitemstages.commands.addstages.success.target": "Вы получили %s стадии!",
+
+  "thitemstages.commands.removestages.success.sender": "Удалены %s стадии с %s!",
+  "thitemstages.commands.removestages.success.target": "Вы больше не имеете %s стадий!",
+
+  "thitemstages.commands.check.failure.empty": "%s не имеет никаких стадий!",
+  "thitemstages.commands.check.success.list": "%s имеет такие стадии: %s!",
+
+  "thitemstages.commands.all.target": "Вы получили все доступные этапы!",
+  "thitemstages.commands.all.sender": "%s получил все доступные этапы!",
+
+  "thitemstages.commands.clear.target": "Все ваши этапы были удалены!",
+  "thitemstages.commands.clear.sender": "Removed %s stages from %s's stage data!",
+
+  "thitemstages.tooltip.stage.message": "Этот предмет на стадии: ",
+  "thitemstages.tooltip.stage.left_bracket": "[",
+  "thitemstages.tooltip.stage.right_bracket": "]",
+  "thitemstages.tooltip.stage.stage": "%s",
+  "thitemstages.tooltip.pickup": "Вы не можете поднимать этот предмет!",
+  "thitemstages.tooltip.playerinventory": "Этот предмет будет удален из вашего инвентаря!",
+  "thitemstages.tooltip.playerequipment": "Этот предмет будет выпадать из снаряжения!",
+  "thitemstages.tooltip.usableitems": "Вы не можете использовать этот предмет!",
+  "thitemstages.tooltip.usableblocks": "Вы не можете разместить/использовать блок!",
+  "thitemstages.tooltip.hideinjei": "Этот предмет спрятан в JEI.",
+
+  "thitemstages.screen.unavailable.items.dropped.message": "Из вашего инвентаря выпали недоступные предметы!",
+  "thitemstages.screen.unavailable.items.pickup.message": "Вы не можете забрать этот предмет!",
+  "thitemstages.screen.unavailable.dimension.message": "У вас нет доступа к этому измерению!"
+
+
+}
