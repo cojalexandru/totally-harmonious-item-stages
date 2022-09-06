@@ -25,6 +25,7 @@ import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -282,11 +283,23 @@ public class Events {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
                 if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(player, stage)){
                     if(checkAllItems(s, new ItemStack(event.getWorld().getBlockState(event.getPos()).getBlock().asItem()))) {
-                        player.displayClientMessage(new TextComponent("You won't be able to use this block!").withStyle(ChatFormatting.RED), true);
+                        player.displayClientMessage(new TextComponent("You won't be able to use or destroy this block!").withStyle(ChatFormatting.RED), true);
                     }
                 }
             });
         }
+    }
+
+    @SubscribeEvent
+    public void onPlayerDestroyBlock(BlockEvent.BreakEvent event){
+        Registry.getRestrictions().forEach((s, x) -> {
+            String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+            if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(event.getPlayer(), stage)){
+                if(checkAllItems(s, new ItemStack(event.getWorld().getBlockState(event.getPos()).getBlock().asItem()))){
+                    event.setCanceled(true);
+                }
+            }
+        });
     }
 
     @SubscribeEvent
