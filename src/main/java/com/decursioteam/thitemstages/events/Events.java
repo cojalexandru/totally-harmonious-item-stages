@@ -21,11 +21,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
-import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.event.entity.player.PlayerContainerEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.entity.player.*;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -291,11 +287,15 @@ public class Events {
     }
 
     @SubscribeEvent
-    public void onPlayerDestroyBlock(BlockEvent.BreakEvent event){
+    public void onPlayerDestroyBlock(PlayerEvent.BreakSpeed event){
+        if (event.getState() == null || event.getPlayer() == null) {
+            return;
+        }
+
         Registry.getRestrictions().forEach((s, x) -> {
             String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
             if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(event.getPlayer(), stage)){
-                if(checkAllItems(s, new ItemStack(event.getWorld().getBlockState(event.getPos()).getBlock().asItem()))){
+                if(checkAllItems(s, new ItemStack(event.getState().getBlock().asItem()))){
                     event.setCanceled(true);
                 }
             }
