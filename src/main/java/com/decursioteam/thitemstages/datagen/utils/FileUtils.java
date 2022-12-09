@@ -1,18 +1,33 @@
 package com.decursioteam.thitemstages.datagen.utils;
 
 import com.decursioteam.thitemstages.THItemStages;
+import com.decursioteam.thitemstages.datagen.RestrictionsData;
+import com.decursioteam.thitemstages.restrictions.ItemRestriction;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.*;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class FileUtils{
+import static com.decursioteam.thitemstages.utils.ResourceUtil.getRegistryName;
+import static com.decursioteam.thitemstages.utils.ResourceUtil.isItemExcluded;
+
+public class FileUtils
+{
 
     public static final String JSON = ".json";
     public static final String ZIP = ".zip";
@@ -88,7 +103,6 @@ public class FileUtils{
         consumer.accept(reader, name);
     }
 
-
     private static void copyFiles(Path source, Path targetPath) {
         try (Stream<Path> sourceStream = Files.walk(source)) {
             sourceStream.filter(f -> f.getFileName().toString().endsWith(JSON))
@@ -103,4 +117,126 @@ public class FileUtils{
             THItemStages.LOGGER.error("Could not stream source files: {}", source);
         }
     }
+
+    public static boolean restrictionExists(String restriction, String stage, String advancedTooltips, String itemTitle, int pickupDelay, boolean hideInJEI, boolean canPickup, boolean containerListWhitelist, boolean checkPlayerInventory, boolean checkPlayerEquipment, boolean usableItems, boolean usableBlocks, boolean destroyableBlocks)
+    {
+        return RestrictionsData.getRestrictionData(restriction).getData().getStage().equals(stage)
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getAdvancedTooltips().equals(advancedTooltips)
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getItemTitle().equals(itemTitle)
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getPickupDelay() == pickupDelay
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getHideInJEI() == hideInJEI
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getCanPickup() == canPickup
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getContainerListWhitelist() == containerListWhitelist
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getCheckPlayerInventory() == checkPlayerInventory
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getCheckPlayerEquipment() == checkPlayerEquipment
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getUsableItems() == usableItems
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getUsableBlocks() == usableBlocks
+                && RestrictionsData.getRestrictionData(restriction).getSettingsCodec().getDestroyableBlocks() == destroyableBlocks;
+    }
+    public static void restrictItem(String stage, String advancedTooltips, String itemTitle, int pickupDelay, boolean hideInJEI, boolean canPickup, boolean containerListWhitelist, boolean checkPlayerInventory, boolean checkPlayerEquipment, boolean usableItems, boolean usableBlocks, boolean destroyableBlocks, ItemStack itemStack)
+    {
+        RestrictionsData.getRegistry().getRawRestrictions().forEach((restriction, jsonFile) -> {
+            if(restrictionExists(restriction, stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks)) {
+
+                JsonObject itemElement = new JsonObject();
+                itemElement.addProperty("item", getRegistryName(itemStack.getItem()).toString());
+                if(itemStack.getTag() != null) {
+                    try {
+                        itemElement.add("nbt", GsonHelper.parse(NbtUtils.toPrettyComponent(itemStack.getTag()).getString(), true));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if(!RestrictionsData.getRestrictionData(restriction).getData().getItemList().contains(new ItemRestriction(getRegistryName(itemStack.getItem()), Objects.requireNonNull(Objects.requireNonNull(Optional.ofNullable(itemStack.getTag())))))) {
+                    jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().add(itemElement);
+                }
+
+                if(!isItemExcluded(restriction, itemStack)) {
+                    for (int i = 0; i <= jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().size(); i++) {
+                        if(jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().get(i).getAsString().equals(getRegistryName(itemStack.getItem()).toString())) {
+                            jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().remove(i);
+                        }
+                    }
+                }
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String jsonOutput = gson.toJson(jsonFile);
+                try (PrintWriter out = new PrintWriter(new FileWriter(createCustomPath("restrictions")+ "/" + restriction + ".json"))) {
+                    out.write(jsonOutput);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if(!RestrictionsData.getRestrictionData(restriction).getData().getStage().equals(stage)) {
+                if(RestrictionsData.getRestrictionData(restriction).getData().getItemList().contains((new ItemRestriction(getRegistryName(itemStack.getItem()), Objects.requireNonNull(Objects.requireNonNull(Optional.ofNullable(itemStack.getTag()))))))) {
+                    for (int i = 0; i <= jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().size(); i++) {
+                        if(jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().get(i).getAsString().equals(getRegistryName(itemStack.getItem()).toString())) {
+                            jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().remove(i);
+                        }
+                    }
+                }
+
+                if(isItemExcluded(restriction, itemStack)) {
+                    jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().add(Objects.requireNonNull(getRegistryName(itemStack.getItem()).toString()));
+                }
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String jsonOutput = gson.toJson(jsonFile);
+                try (PrintWriter out = new PrintWriter(new FileWriter(createCustomPath("restrictions")+ "/" + restriction + ".json"))) {
+                    out.write(jsonOutput);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            RestrictionsData.getRegistry().regenerateCustomRestrictionData();
+            RestrictionsData.getRegistry().cacheRawRestrictionsData(restriction, jsonFile);
+        });
+    }
+    public static void addRestriction(String stage, String advancedTooltips, String itemTitle, int pickupDelay, boolean hideInJEI, boolean canPickup, boolean containerListWhitelist, boolean checkPlayerInventory, boolean checkPlayerEquipment, boolean usableItems, boolean usableBlocks, boolean destroyableBlocks)
+    {
+        try (PrintWriter out = new PrintWriter(new FileWriter(createCustomPath("restrictions")+ "/" + stage + "_" + itemTitle + ".json"))) {
+            out.write("{" +
+                    "\"Restriction Data\":" +
+                    "{" +
+                    "\"stage\":" + "\"" + stage + "\"," +
+                    "\"itemList\": [ ]" +
+                    "}," +
+                    "\"Settings\":" +
+                    "{" +
+                    "\"advancedTooltips\":" + "\"" + advancedTooltips + "\"," +
+                    "\"itemTitle\":" + "\"" + itemTitle + "\"," +
+                    "\"pickupDelay\":" + pickupDelay + "," +
+                    "\"hideInJEI\":" + hideInJEI + "," +
+                    "\"canPickup\":" + canPickup + "," +
+                    "\"containerListWhitelist\":" + containerListWhitelist + "," +
+                    "\"checkPlayerInventory\":" + checkPlayerInventory + "," +
+                    "\"checkPlayerEquipment\":" + checkPlayerEquipment + "," +
+                    "\"usableItems\":" + usableItems + "," +
+                    "\"destroyableBlocks\":" + destroyableBlocks + "," +
+                    "\"usableBlocks\":" + usableBlocks +
+                    "}" +
+                    "}");
+            RestrictionsData.getRegistry().getRawRestrictions().forEach((restriction, jsonFile) -> {
+                RestrictionsData.getRegistry().regenerateCustomRestrictionData();
+                RestrictionsData.getRegistry().cacheRawRestrictionsData(restriction, jsonFile);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Path createCustomPath(String pathName) {
+        Path customPath = Paths.get(FMLPaths.CONFIGDIR.get().toAbsolutePath().toString(), THItemStages.MOD_ID, pathName);
+        createDirectory(customPath, pathName);
+        return customPath;
+    }
+    private static void createDirectory(Path path, String dirName) {
+        try {
+            Files.createDirectories(path);
+        } catch (FileAlreadyExistsException ignored) { //ignored
+        } catch (IOException e) {
+            THItemStages.LOGGER.error("failed to create \"{}\" directory", dirName);
+        }
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.decursioteam.thitemstages.codec;
 
 import com.decursioteam.thitemstages.restrictions.DimensionRestriction;
+import com.decursioteam.thitemstages.restrictions.ItemExclusion;
 import com.decursioteam.thitemstages.restrictions.ItemRestriction;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Decoder;
@@ -20,10 +21,10 @@ public class RestrictionCodec {
     protected final List<ResourceLocation> tagList;
     protected final List<String> modList;
     protected final List<String> containerList;
-    protected final List<ResourceLocation> exceptionList;
+    protected final List<ItemExclusion> exceptionList;
     protected String name;
     protected String stage;
-    private RestrictionCodec(String name, String stage, List<ItemRestriction> itemList, List<ResourceLocation> tagList, List<DimensionRestriction> dimensionList, List<String> modList, List<String> containerList, List<ResourceLocation> exceptionList){
+    private RestrictionCodec(String name, String stage, List<ItemRestriction> itemList, List<ResourceLocation> tagList, List<DimensionRestriction> dimensionList, List<String> modList, List<String> containerList, List<ItemExclusion> exceptionList){
         this.name = name;
         this.stage = stage;
         this.itemList = itemList;
@@ -53,7 +54,7 @@ public class RestrictionCodec {
                 DimensionRestriction.codec().listOf().fieldOf("dimensionList").orElse(List.of()).forGetter(RestrictionCodec::getDimensionList),
                 Codec.STRING.listOf().fieldOf("modList").orElse(List.of()).forGetter(RestrictionCodec::getModList),
                 Codec.STRING.listOf().fieldOf("containerList").orElse(List.of()).forGetter(RestrictionCodec::getContainerList),
-                ResourceLocation.CODEC.listOf().fieldOf("exceptionList").orElse(List.of()).forGetter(RestrictionCodec::getExceptionList)
+                ItemExclusion.codec().listOf().fieldOf("exceptionList").orElse(List.of()).forGetter(RestrictionCodec::getExceptionList)
         ).apply(instance, RestrictionCodec::new));
     }
     public List<ItemRestriction> getItemList() {
@@ -79,7 +80,7 @@ public class RestrictionCodec {
         return containerList;
     }
 
-    public List<ResourceLocation> getExceptionList() {
+    public List<ItemExclusion> getExceptionList() {
         return exceptionList;
     }
 
@@ -94,7 +95,7 @@ public class RestrictionCodec {
 
     public static class Mutable extends RestrictionCodec {
 
-        public Mutable(String name, String stage, List<ItemRestriction> itemList, List<ResourceLocation> tagList, List<DimensionRestriction> dimensionList, List<String> modList,  List<String> containerList, List<ResourceLocation> exceptionList) {
+        public Mutable(String name, String stage, List<ItemRestriction> itemList, List<ResourceLocation> tagList, List<DimensionRestriction> dimensionList, List<String> modList,  List<String> containerList, List<ItemExclusion> exceptionList) {
             super(name, stage, itemList, tagList, dimensionList, modList, containerList, exceptionList);
         }
 

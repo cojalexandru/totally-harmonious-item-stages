@@ -1,6 +1,11 @@
 {
 
   "thitemstages.items.dropped": "Unavailable items were dropped from your inventory!",
+  "thitemstages.item.interact.error": "You can't use this item!",
+  "thitemstages.block.interact.warn": "You won't be able to use this block!",
+  "thitemstages.block.interact.error": "You can't use this block!",
+  "thitemstages.item.pickup.error": "You can't pickup this item!",
+  "thitemstages.block.destroy": "You can't destroy this block!",
 
   "thitemstages.commands.reloadstages": "Successfully reloaded the following stages: %s",
 

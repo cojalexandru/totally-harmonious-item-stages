@@ -1,6 +1,7 @@
 package com.decursioteam.thitemstages.events;
 
 import com.decursioteam.thitemstages.Registry;
+import com.decursioteam.thitemstages.THItemStages;
 import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
@@ -176,6 +177,7 @@ public class Events {
                 {
                     for (ItemStack item : player.getInventory().items) {
                         if(check(s, item, CHECK_TYPES.ALL)) {
+                            THItemStages.LOGGER.warn(item);
                             dropItemStack(player, item);
                         }
                     }

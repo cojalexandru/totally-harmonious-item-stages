@@ -2,6 +2,8 @@ package com.decursioteam.thitemstages.commands;
 
 import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.THItemStages;
+import com.decursioteam.thitemstages.datagen.RestrictionsData;
+import com.decursioteam.thitemstages.datagen.utils.FileUtils;
 import com.decursioteam.thitemstages.utils.StageUtil;
 import com.decursioteam.thitemstages.utils.StagesHandler;
 import com.mojang.brigadier.Command;
@@ -19,6 +21,8 @@ import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.commands.synchronization.SingletonArgumentInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -35,7 +39,10 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static com.decursioteam.thitemstages.datagen.utils.FileUtils.restrictionExists;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class THISCommands {
@@ -56,7 +63,7 @@ public class THISCommands {
         command.then(createPlayerCommand("check", 0, ctx -> getPlayerStages(ctx, true), ctx -> getPlayerStages(ctx, false)));
         command.then(createPlayerCommand("clear", 2, ctx -> clearStages(ctx, true), ctx -> clearStages(ctx, false)));
         command.then(createPlayerCommand("all", 2, ctx -> giveStages(ctx, true), ctx -> giveStages(ctx, false)));
-        //command.then(createRestrictCommand("advanced_restrict", 2, THISCommands::restrictItem));
+        command.then(createRestrictCommand("advanced_restrict", 2, THISCommands::restrictItem));
         //command.then(createFileRestrictCommand("restrict", 2, THISCommands::restrictItemWithFile));
         command.then(createInfoCommand("reload", 2, THISCommands::reloadStages));
         command.then(createInfoCommand("info", 2, THISCommands::listStages));
@@ -84,7 +91,8 @@ public class THISCommands {
                         .then(Commands.argument("checkPlayerEquipment", BoolArgumentType.bool())
                         .then(Commands.argument("usableItems", BoolArgumentType.bool())
                         .then(Commands.argument("usableBlocks", BoolArgumentType.bool())
-                        .executes(command))))))))))));
+                        .then(Commands.argument("destroyableBlocks", BoolArgumentType.bool())
+                        .executes(command)))))))))))));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> createFileRestrictCommand (String key, int permissions, Command<CommandSourceStack> command) {
@@ -240,6 +248,36 @@ public class THISCommands {
         final int removedStages = StageUtil.clearStages(player);
         ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.clear.target", removedStages), true);
         if(player != ctx.getSource().getEntity()) ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.clear.sender", removedStages, player.getDisplayName()), true);
+    }
+
+    private static int restrictItem(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final String stage = StageArgumentType.getStage(ctx, "stage");
+        final String advancedTooltips = StringArgumentType.getString(ctx, "advancedTooltips");
+        final String itemTitle = StringArgumentType.getString(ctx, "itemTitle");
+        final int pickupDelay = IntegerArgumentType.getInteger(ctx, "pickupDelay");
+        final boolean hideInJEI = BoolArgumentType.getBool(ctx, "hideInJEI");
+        final boolean canPickup = BoolArgumentType.getBool(ctx, "canPickup");
+        final boolean containerListWhitelist = BoolArgumentType.getBool(ctx, "containerListWhitelist");
+        final boolean checkPlayerInventory = BoolArgumentType.getBool(ctx, "checkPlayerInventory");
+        final boolean checkPlayerEquipment = BoolArgumentType.getBool(ctx, "checkPlayerEquipment");
+        final boolean usableItems = BoolArgumentType.getBool(ctx, "usableItems");
+        final boolean usableBlocks = BoolArgumentType.getBool(ctx, "usableBlocks");
+        final boolean destroyableBlocks = BoolArgumentType.getBool(ctx, "destroyableBlocks");
+
+        Player player = ctx.getSource().getPlayerOrException();
+        AtomicInteger counter = new AtomicInteger();
+        RestrictionsData.getRegistry().getRawRestrictions().forEach((restriction, x) -> {
+            if(restrictionExists(restriction, stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks))
+            {
+                FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks, player.getItemInHand(InteractionHand.MAIN_HAND));
+                counter.getAndIncrement();
+            }
+        });
+        if(!(counter.get() > 0)){
+            FileUtils.addRestriction(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks);
+            FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks, player.getItemInHand(InteractionHand.MAIN_HAND));
+        }
+        return 0;
     }
 
 }

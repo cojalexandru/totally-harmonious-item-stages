@@ -2,6 +2,7 @@ package com.decursioteam.thitemstages.utils;
 
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.restrictions.DimensionRestriction;
+import com.decursioteam.thitemstages.restrictions.ItemExclusion;
 import com.decursioteam.thitemstages.restrictions.ItemRestriction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -11,6 +12,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ResourceUtil {
     public static Set<ItemRestriction> getItems(String restriction){
@@ -25,10 +27,8 @@ public class ResourceUtil {
         return new HashSet<>(RestrictionsData.getRestrictionData(restriction).getData().getModList());
     }
 
-    public static Set<ResourceLocation> getExceptions(String restriction){
-        Set<ResourceLocation> exceptionList = new HashSet<>(RestrictionsData.getRestrictionData(restriction).getData().getExceptionList());
-        exceptionList.add(new ResourceLocation("minecraft:air"));
-        return exceptionList;
+    public static Set<ItemExclusion> getExceptions(String restriction){
+        return new HashSet<>(RestrictionsData.getRestrictionData(restriction).getData().getExceptionList());
     }
 
     public static Set<DimensionRestriction> getDimensions(String restriction){
@@ -45,6 +45,7 @@ public class ResourceUtil {
     }
 
     public static boolean check(String restriction, ItemStack itemStack, CHECK_TYPES checkType) {
+        if(getRegistryName(itemStack.getItem()).equals(new ResourceLocation("minecraft:air"))) return false;
         switch(checkType)
         {
             case ITEM: {
@@ -60,9 +61,9 @@ public class ResourceUtil {
                 return pass;
             }
             case MOD: {
-                if(!getMods(restriction).isEmpty() && !getExceptions(restriction).contains(getRegistryName(itemStack.getItem()))) {
+                if(!getMods(restriction).isEmpty() && isItemExcluded(restriction, itemStack)) {
                     for (String modID : getMods(restriction)) {
-                        if (Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(itemStack.getItem())).getNamespace().equals(modID) && !getExceptions(restriction).contains(getRegistryName(itemStack.getItem()))) {
+                        if (Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(itemStack.getItem())).getNamespace().equals(modID) && isItemExcluded(restriction, itemStack)) {
                             return true;
                         }
                     }
@@ -70,7 +71,7 @@ public class ResourceUtil {
                 return false;
             }
             case TAG: {
-                if(!getTags(restriction).isEmpty() && !getExceptions(restriction).contains(getRegistryName(itemStack.getItem()))) {
+                if(!getTags(restriction).isEmpty() && isItemExcluded(restriction, itemStack)) {
                     for (ResourceLocation tagID : getTags(restriction)) {
                         if (itemStack.is(Objects.requireNonNull(ForgeRegistries.ITEMS.tags()).createTagKey(tagID))) {
                             return true;
@@ -87,6 +88,28 @@ public class ResourceUtil {
             default:
                 return false;
         }
+    }
+
+    public static boolean isItemExcluded(String restriction, ItemStack itemStack)
+    {
+        AtomicBoolean pass = new AtomicBoolean(true);
+        getExceptions(restriction).forEach(itemExclusion -> {
+            if (itemExclusion.getResourceLocation() != null) {
+                if(itemExclusion.getCompoundNBT() == null) {
+                    if(itemExclusion.getItemStack().sameItem(itemStack)) pass.set(false);
+                }
+                else if(itemStack.getTag() != null) {
+                    if(itemExclusion.getItemStack().sameItem(itemStack) && itemExclusion.getCompoundNBT().toString().equals(itemStack.getTag().toString())) pass.set(false);
+                }
+            }
+            else if(itemExclusion.getMod() != null) {
+                if(getRegistryName(itemStack.getItem()).getNamespace().equals(itemExclusion.getMod())) pass.set(false);
+            }
+            else if(itemExclusion.getTag() != null) {
+                if(itemStack.is(Objects.requireNonNull(ForgeRegistries.ITEMS.tags()).createTagKey(itemExclusion.getTag()))) pass.set(false);
+            }
+        });
+        return pass.get();
     }
 
     public enum CHECK_TYPES {
