@@ -1,10 +1,12 @@
 package com.decursioteam.thitemstages.datagen.utils;
 
+import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.THItemStages;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.restrictions.ItemRestriction;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.util.GsonHelper;
@@ -135,18 +137,18 @@ public class FileUtils
     }
     public static void restrictItem(String stage, String advancedTooltips, String itemTitle, int pickupDelay, boolean hideInJEI, boolean canPickup, boolean containerListWhitelist, boolean checkPlayerInventory, boolean checkPlayerEquipment, boolean usableItems, boolean usableBlocks, boolean destroyableBlocks, ItemStack itemStack)
     {
+        JsonObject itemElement = new JsonObject();
+        itemElement.addProperty("item", getRegistryName(itemStack.getItem()).toString());
+        if(itemStack.getTag() != null) {
+            try {
+                itemElement.add("nbt", GsonHelper.parse(NbtUtils.toPrettyComponent(itemStack.getTag()).getString(), true));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         RestrictionsData.getRegistry().getRawRestrictions().forEach((restriction, jsonFile) -> {
             if(restrictionExists(restriction, stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks)) {
 
-                JsonObject itemElement = new JsonObject();
-                itemElement.addProperty("item", getRegistryName(itemStack.getItem()).toString());
-                if(itemStack.getTag() != null) {
-                    try {
-                        itemElement.add("nbt", GsonHelper.parse(NbtUtils.toPrettyComponent(itemStack.getTag()).getString(), true));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
 
                 if(!RestrictionsData.getRestrictionData(restriction).getData().getItemList().contains(new ItemRestriction(getRegistryName(itemStack.getItem()), Objects.requireNonNull(Objects.requireNonNull(Optional.ofNullable(itemStack.getTag())))))) {
                     jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().add(itemElement);
@@ -154,7 +156,7 @@ public class FileUtils
 
                 if(!isItemExcluded(restriction, itemStack)) {
                     for (int i = 0; i <= jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().size(); i++) {
-                        if(jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().get(i).getAsString().equals(getRegistryName(itemStack.getItem()).toString())) {
+                        if(jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().get(i).equals(itemElement)) {
                             jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().remove(i);
                         }
                     }
@@ -171,14 +173,14 @@ public class FileUtils
             if(!RestrictionsData.getRestrictionData(restriction).getData().getStage().equals(stage)) {
                 if(RestrictionsData.getRestrictionData(restriction).getData().getItemList().contains((new ItemRestriction(getRegistryName(itemStack.getItem()), Objects.requireNonNull(Objects.requireNonNull(Optional.ofNullable(itemStack.getTag()))))))) {
                     for (int i = 0; i <= jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().size(); i++) {
-                        if(jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().get(i).getAsString().equals(getRegistryName(itemStack.getItem()).toString())) {
+                        if(jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().get(i).equals(itemElement)) {
                             jsonFile.get("Restriction Data").getAsJsonObject().get("itemList").getAsJsonArray().remove(i);
                         }
                     }
                 }
 
                 if(isItemExcluded(restriction, itemStack)) {
-                    jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().add(Objects.requireNonNull(getRegistryName(itemStack.getItem()).toString()));
+                    jsonFile.get("Restriction Data").getAsJsonObject().get("exceptionList").getAsJsonArray().add(itemElement);
                 }
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 String jsonOutput = gson.toJson(jsonFile);
@@ -188,38 +190,44 @@ public class FileUtils
                     e.printStackTrace();
                 }
             }
-            RestrictionsData.getRegistry().regenerateCustomRestrictionData();
             RestrictionsData.getRegistry().cacheRawRestrictionsData(restriction, jsonFile);
+            RestrictionsData.getRegistry().regenerateCustomRestrictionData();
         });
     }
     public static void addRestriction(String stage, String advancedTooltips, String itemTitle, int pickupDelay, boolean hideInJEI, boolean canPickup, boolean containerListWhitelist, boolean checkPlayerInventory, boolean checkPlayerEquipment, boolean usableItems, boolean usableBlocks, boolean destroyableBlocks)
     {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        JsonObject jsonFile = new JsonObject();
+        JsonObject restrictionData = new JsonObject();
+        JsonObject settings = new JsonObject();
+        JsonArray itemList = new JsonArray();
+
+        jsonFile.add("Restriction Data", restrictionData);
+        jsonFile.add("Settings", settings);
+
+        restrictionData.addProperty("stage", stage);
+        restrictionData.add("itemList", itemList);
+
+        settings.addProperty("advancedTooltips", advancedTooltips);
+        settings.addProperty("itemTitle", itemTitle);
+        settings.addProperty("pickupDelay", pickupDelay);
+        settings.addProperty("hideInJEI", hideInJEI);
+        settings.addProperty("canPickup", canPickup);
+        settings.addProperty("containerListWhitelist", containerListWhitelist);
+        settings.addProperty("checkPlayerInventory", checkPlayerInventory);
+        settings.addProperty("checkPlayerEquipment", checkPlayerEquipment);
+        settings.addProperty("usableItems", usableItems);
+        settings.addProperty("destroyableBlocks", destroyableBlocks);
+        settings.addProperty("usableBlocks", usableBlocks);
+
+
+        String jsonOutput = gson.toJson(jsonFile);
         try (PrintWriter out = new PrintWriter(new FileWriter(createCustomPath("restrictions")+ "/" + stage + "_" + itemTitle + ".json"))) {
-            out.write("{" +
-                    "\"Restriction Data\":" +
-                    "{" +
-                    "\"stage\":" + "\"" + stage + "\"," +
-                    "\"itemList\": [ ]" +
-                    "}," +
-                    "\"Settings\":" +
-                    "{" +
-                    "\"advancedTooltips\":" + "\"" + advancedTooltips + "\"," +
-                    "\"itemTitle\":" + "\"" + itemTitle + "\"," +
-                    "\"pickupDelay\":" + pickupDelay + "," +
-                    "\"hideInJEI\":" + hideInJEI + "," +
-                    "\"canPickup\":" + canPickup + "," +
-                    "\"containerListWhitelist\":" + containerListWhitelist + "," +
-                    "\"checkPlayerInventory\":" + checkPlayerInventory + "," +
-                    "\"checkPlayerEquipment\":" + checkPlayerEquipment + "," +
-                    "\"usableItems\":" + usableItems + "," +
-                    "\"destroyableBlocks\":" + destroyableBlocks + "," +
-                    "\"usableBlocks\":" + usableBlocks +
-                    "}" +
-                    "}");
-            RestrictionsData.getRegistry().getRawRestrictions().forEach((restriction, jsonFile) -> {
-                RestrictionsData.getRegistry().regenerateCustomRestrictionData();
-                RestrictionsData.getRegistry().cacheRawRestrictionsData(restriction, jsonFile);
-            });
+            out.write(jsonOutput);
+            RestrictionsData.getRegistry().cacheRawRestrictionsData(stage + "_" + itemTitle, jsonFile);
+            RestrictionsData.getRegistry().regenerateCustomRestrictionData();
+            Registry.registerRestrictionsList();
         } catch (Exception e) {
             e.printStackTrace();
         }

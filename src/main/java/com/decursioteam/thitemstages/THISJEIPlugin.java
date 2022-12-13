@@ -93,10 +93,10 @@ public class THISJEIPlugin implements IModPlugin {
 
     private void restoreItems(IIngredientManager iIngredientManager) {
         if (!this.hiddenItems.isEmpty()) {
-            if(CommonConfig.debugMode.get()) LOGGER.warn("[T.H.I.S] - Restoring the following items at runtime: " + this.hiddenItems);
+            if(CommonConfig.debugMode.get()) LOGGER.info("Restoring the following items at runtime: " + this.hiddenItems);
             iIngredientManager.addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, this.hiddenItems);
             this.hiddenItems.clear();
-        } else if(CommonConfig.debugMode.get()) LOGGER.warn("[T.H.I.S] - There are no items available for restoring to the JEI ingredient list!");
+        } else if(CommonConfig.debugMode.get()) LOGGER.warn("There are no items available for restoring to the JEI ingredient list!");
     }
 
     private void collectItems(IIngredientManager iIngredientManager) {
@@ -135,14 +135,14 @@ public class THISJEIPlugin implements IModPlugin {
             catch (NullPointerException e){
                 //
             }
-        } else if(CommonConfig.debugMode.get()) LOGGER.warn("[T.H.I.S] - Couldn't collect items that are supposed to be hidden in JEI because JEIRuntime or IngredientManager ar missing! ");
+        } else if(CommonConfig.debugMode.get()) LOGGER.error("Couldn't collect items that are supposed to be hidden in JEI because JEIRuntime or IngredientManager ar missing! ");
     }
 
     private void hideItems(IIngredientManager iIngredientManager) {
         if (!this.hiddenItems.isEmpty()) {
-            if(CommonConfig.debugMode.get()) LOGGER.warn("[T.H.I.S] - Hiding the following items: " + this.hiddenItems);
+            if(CommonConfig.debugMode.get()) LOGGER.info("Hiding the following items: " + this.hiddenItems);
             iIngredientManager.removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK, this.hiddenItems);
-        } else if(CommonConfig.debugMode.get()) LOGGER.warn("[T.H.I.S] - The are no items that are supposed to be hidden in JEI");
+        } else if(CommonConfig.debugMode.get()) LOGGER.warn("The are no items that are supposed to be hidden in JEI");
     }
 
     private void add(ItemStack itemStack) {

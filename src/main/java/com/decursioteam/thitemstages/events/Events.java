@@ -41,7 +41,6 @@ import static com.decursioteam.thitemstages.utils.Utils.dropItemStack;
 public class Events {
 
     private Set<ItemStack> prevInventory;
-
     @SubscribeEvent
     public void playerContainerOpenEvent(PlayerContainerEvent.Open event) {
         String containerName = event.getContainer().getClass().getName();
@@ -177,7 +176,6 @@ public class Events {
                 {
                     for (ItemStack item : player.getInventory().items) {
                         if(check(s, item, CHECK_TYPES.ALL)) {
-                            THItemStages.LOGGER.warn(item);
                             dropItemStack(player, item);
                         }
                     }

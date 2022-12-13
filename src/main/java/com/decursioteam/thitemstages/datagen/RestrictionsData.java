@@ -25,7 +25,7 @@ public class RestrictionsData implements IRestrictionsData {
     public void regenerateCustomRestrictionData() {
         RAW_DATA.forEach((s, jsonObject) -> CUSTOM_DATA.compute(s, (s1, restrictionCodec) ->
                 Restrictions.codec(s).parse(JsonOps.INSTANCE, jsonObject)
-                        .getOrThrow(false, s2 -> THItemStages.LOGGER.error("[T.H.I.S] - Couldn't create data for {} stage!", s))));
+                        .getOrThrow(false, s2 -> THItemStages.LOGGER.error("Couldn't create data for {} stage!", s))));
     }
 
     public JsonObject getRawORestrictionsData(String name) {
@@ -47,13 +47,18 @@ public class RestrictionsData implements IRestrictionsData {
         return Collections.unmodifiableMap(RAW_DATA);
     }
 
+    public void clearRawRestrictionsData()
+    {
+        RAW_DATA.clear();
+    }
+
     public void cacheRawRestrictionsData(String name, JsonObject restrictionCodec) {
         try {
             if(RAW_DATA.containsKey(name.toLowerCase(Locale.ENGLISH))) {
                 RAW_DATA.computeIfPresent(name.toLowerCase(Locale.ENGLISH).replace(" ", "_"), (s, oldVal) -> Objects.requireNonNull(restrictionCodec));
             } else RAW_DATA.computeIfAbsent(name.toLowerCase(Locale.ENGLISH).replace(" ", "_"), s -> Objects.requireNonNull(restrictionCodec));
         } catch (IllegalArgumentException e){
-            THItemStages.LOGGER.error("[T.H.I.S] - There is a error with the " + name + " stage file");
+            THItemStages.LOGGER.error("There is a error with the " + name + " stage file");
             THItemStages.LOGGER.error(e);
         }
     }

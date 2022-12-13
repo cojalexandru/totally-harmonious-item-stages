@@ -1,5 +1,6 @@
 package com.decursioteam.thitemstages.utils;
 
+import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;

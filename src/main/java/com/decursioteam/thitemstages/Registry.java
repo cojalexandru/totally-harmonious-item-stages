@@ -37,9 +37,6 @@ public class Registry {
 
     public static void registerRestrictionsList() {
         RestrictionsData.getRegistry().getRestrictions().forEach((name, data) -> registerRestrictions(name));
-        RestrictionsData.getRegistry().getRestrictions().forEach((name, data) -> RestrictionsData.getRestrictionData(name).getData().getItemList().forEach(itemRestriction -> {
-            THItemStages.LOGGER.warn(itemRestriction.getResourceLocation() + " " + itemRestriction.getCompoundNBT());
-        }));
     }
 
     public static void registerRestrictions(String name) {

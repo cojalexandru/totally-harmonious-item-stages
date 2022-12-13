@@ -43,12 +43,12 @@ public class StagesHandler {
 
                 final CompoundTag tag = NbtIo.read(playerFile);
                 playerData.readFromNBT(tag);
-                THItemStages.LOGGER.debug("[T.H.I.S] - Loaded {} stages for {}.", playerData.getStages().size(), event.getEntity().getName().getString());
+                THItemStages.LOGGER.debug("Loaded {} stages for {}.", playerData.getStages().size(), event.getEntity().getName().getString());
             }
 
             catch (final IOException e) {
 
-                THItemStages.LOGGER.error("[T.H.I.S] - Could not read player data for {}.", event.getEntity().getName().getString());
+                THItemStages.LOGGER.error("Could not read player data for {}.", event.getEntity().getName().getString());
                 THItemStages.LOGGER.catching(e);
             }
         }
@@ -65,17 +65,18 @@ public class StagesHandler {
 
             final IStagesData playerData = getPlayerData(playerUUID);
             final File playerFile = getPlayerFile(event.getPlayerDirectory(), event.getPlayerUUID());
+            assert playerData != null;
             final CompoundTag tag = playerData.writeToNBT();
 
             if (tag != null) {
                 try {
                     NbtIo.write(tag, playerFile);
-                    LOGGER.info("[T.H.I.S] - Saved {} stages for {}.", playerData.getStages().size(), event.getEntity().getName().getString());
+                    LOGGER.info("Saved {} stages for {}.", playerData.getStages().size(), event.getEntity().getName().getString());
                 }
 
                 catch (final IOException e) {
                     if(CommonConfig.debugMode.get()) {
-                        LOGGER.error("[T.H.I.S] - Could not write player data for {}.", playerFile.getName());
+                        LOGGER.error("Could not write player data for {}.", playerFile.getName());
                         LOGGER.catching(e);
                     }
                 }
@@ -86,7 +87,7 @@ public class StagesHandler {
     @SubscribeEvent
     public static void onPlayerLoggedIn (PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer) {
-            if(CommonConfig.debugMode.get()) LOGGER.info("[T.H.I.S] - Syncing {} player data with the client", event.getEntity().getName().getString());
+            if(CommonConfig.debugMode.get()) LOGGER.info("Syncing {} player data with the client", event.getEntity().getName().getString());
             StageUtil.syncPlayer((ServerPlayer) event.getEntity());
         }
     }

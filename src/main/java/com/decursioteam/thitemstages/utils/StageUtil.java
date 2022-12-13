@@ -144,7 +144,7 @@ public class StageUtil {
 
         if (info != null) {
 
-            THItemStages.LOGGER.info("[T.H.I.S] - Syncing {} stages for {}.", info.getStages().size(), player.getName().getString());
+            THItemStages.LOGGER.info("Syncing {} stages for {}.", info.getStages().size(), player.getName().getString());
             THItemStages.NETWORK.sendToPlayer(player, new SyncStagesMessage(info.getStages()));
         }
     }

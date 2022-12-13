@@ -51,6 +51,8 @@ public class THISCommands {
     private static final RegistryObject<SingletonArgumentInfo<StageArgumentType>> STAGE_ARGUMENT = COMMAND_ARGUMENT_TYPES.register("stage_argument", () -> ArgumentTypeInfos.registerByClass(StageArgumentType.class, SingletonArgumentInfo.contextFree(StageArgumentType::new)));
     private static final RegistryObject<SingletonArgumentInfo<RestrictionArgumentType>> RESTRICTION_ARGUMENT = COMMAND_ARGUMENT_TYPES.register("restriction_argument", () -> ArgumentTypeInfos.registerByClass(RestrictionArgumentType.class, SingletonArgumentInfo.contextFree(RestrictionArgumentType::new)));
 
+    private static final RegistryObject<SingletonArgumentInfo<TooltipArgumentType>> TOOLTIP_ARGUMENT = COMMAND_ARGUMENT_TYPES.register("tooltip_argument", () -> ArgumentTypeInfos.registerByClass(TooltipArgumentType.class, SingletonArgumentInfo.contextFree(TooltipArgumentType::new)));
+
     public static void init() {
         MinecraftForge.EVENT_BUS.addListener(THISCommands::registerCommands);
         COMMAND_ARGUMENT_TYPES.register(FMLJavaModLoadingContext.get().getModEventBus());
@@ -63,8 +65,7 @@ public class THISCommands {
         command.then(createPlayerCommand("check", 0, ctx -> getPlayerStages(ctx, true), ctx -> getPlayerStages(ctx, false)));
         command.then(createPlayerCommand("clear", 2, ctx -> clearStages(ctx, true), ctx -> clearStages(ctx, false)));
         command.then(createPlayerCommand("all", 2, ctx -> giveStages(ctx, true), ctx -> giveStages(ctx, false)));
-        command.then(createRestrictCommand("advanced_restrict", 2, THISCommands::restrictItem));
-        //command.then(createFileRestrictCommand("restrict", 2, THISCommands::restrictItemWithFile));
+        command.then(createRestrictCommand("restrict", 2, THISCommands::restrictItem));
         command.then(createInfoCommand("reload", 2, THISCommands::reloadStages));
         command.then(createInfoCommand("info", 2, THISCommands::listStages));
         event.getDispatcher().register(command);
@@ -81,7 +82,7 @@ public class THISCommands {
     private static LiteralArgumentBuilder<CommandSourceStack> createRestrictCommand (String key, int permissions, Command<CommandSourceStack> command) {
         return Commands.literal(key).requires(sender -> sender.hasPermission(permissions))
                 .then(Commands.argument("stage", new StageArgumentType())
-                        .then(Commands.argument("advancedTooltips", StringArgumentType.string())
+                        .then(Commands.argument("advancedTooltips", new TooltipArgumentType())
                         .then(Commands.argument("itemTitle", StringArgumentType.string())
                         .then(Commands.argument("pickupDelay", IntegerArgumentType.integer())
                         .then(Commands.argument("hideInJEI", BoolArgumentType.bool())
@@ -95,13 +96,6 @@ public class THISCommands {
                         .executes(command)))))))))))));
     }
 
-    private static LiteralArgumentBuilder<CommandSourceStack> createFileRestrictCommand (String key, int permissions, Command<CommandSourceStack> command) {
-        return Commands.literal(key).requires(sender -> sender.hasPermission(permissions))
-                .then(Commands.argument("stage", new StageArgumentType())
-                .then(Commands.argument("restriction", new RestrictionArgumentType())
-                .executes(command)));
-    }
-
     private static LiteralArgumentBuilder<CommandSourceStack> createSilentStageCommand (String key, int permissions, Command<CommandSourceStack> command, Command<CommandSourceStack> silent) {
         return Commands.literal(key).requires(sender -> sender.hasPermission(permissions))
                 .then(Commands.argument("targets", EntityArgument.players())
@@ -111,6 +105,7 @@ public class THISCommands {
     }
 
     private static int reloadStages (CommandContext<CommandSourceStack> ctx) {
+        RestrictionsData.getRegistry().clearRawRestrictionsData();
         Registry.setupRestrictions();
         Registry.registerRestrictionsList();
         ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.reloadstages", StagesHandler.getStages()), true);

@@ -2,6 +2,7 @@ package com.decursioteam.thitemstages.utils;
 
 import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.THItemStages;
+import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -15,9 +16,10 @@ public class StagesReload implements PreparableReloadListener {
     @Override
     public CompletableFuture<Void> reload(PreparationBarrier preparationBarrier, ResourceManager resourceManager, ProfilerFiller profilerFiller, ProfilerFiller profilerFiller1, Executor executor, Executor executor1) {
         return CompletableFuture.completedFuture(null).thenCompose(preparationBarrier::wait).thenAcceptAsync(x -> {
+            RestrictionsData.getRegistry().clearRawRestrictionsData();
             Registry.setupRestrictions();
             Registry.registerRestrictionsList();
-            THItemStages.LOGGER.info(Component.translatable("thitemstages.commands.reloadstages", StagesHandler.getStages()));
+            THItemStages.LOGGER.info(Component.translatable("thitemstages.commands.reloadstages", StagesHandler.getStages()).toString());
         }, executor);
     }
 }
