@@ -1,7 +1,6 @@
 package com.decursioteam.thitemstages.events;
 
 import com.decursioteam.thitemstages.Registry;
-import com.decursioteam.thitemstages.THItemStages;
 import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
@@ -281,6 +280,33 @@ public class Events {
                     if(check(s, new ItemStack(event.getLevel().getBlockState(event.getPos()).getBlock().asItem()), CHECK_TYPES.ALL))
                     {
                         player.displayClientMessage(Utils.BLOCK_INTERACT_WARN, true);
+                    }
+                }
+                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, stage))
+                {
+                    if(check(s, event.getItemStack(), CHECK_TYPES.ALL))
+                    {
+                        event.setCanceled(true);
+                        player.displayClientMessage(Utils.ITEM_INTERACT_ERROR, true);
+                    }
+                }
+            });
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerInteractWithItem(PlayerInteractEvent.RightClickItem event){
+        if(event.getEntity() != null){
+            Player player = event.getEntity();
+            Registry.getRestrictions().forEach((s, x) -> {
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT);
+
+                if(!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, stage))
+                {
+                    if(check(s, event.getItemStack(), CHECK_TYPES.ALL))
+                    {
+                        event.setCanceled(true);
+                        player.displayClientMessage(Utils.ITEM_INTERACT_ERROR, true);
                     }
                 }
             });
