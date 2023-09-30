@@ -2,6 +2,9 @@ package com.decursioteam.thitemstages.commands;
 
 import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.THItemStages;
+import com.decursioteam.thitemstages.commands.arguments.RestrictionArgumentType;
+import com.decursioteam.thitemstages.commands.arguments.StageArgumentType;
+import com.decursioteam.thitemstages.commands.arguments.TooltipArgumentType;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.FileUtils;
 import com.decursioteam.thitemstages.utils.StageUtil;
@@ -264,6 +267,11 @@ public class THISCommands {
         RestrictionsData.getRegistry().getRawRestrictions().forEach((restriction, x) -> {
             if(restrictionExists(restriction, stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks))
             {
+                /*for (ItemStack item : player.inventoryMenu.getItems()) {
+                    if(!item.is(ItemStack.EMPTY.getItem())) {
+                        FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks, item);
+                    }
+                }*/
                 FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks, player.getItemInHand(InteractionHand.MAIN_HAND));
                 counter.getAndIncrement();
             }

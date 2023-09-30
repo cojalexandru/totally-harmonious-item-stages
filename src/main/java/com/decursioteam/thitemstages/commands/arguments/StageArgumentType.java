@@ -1,25 +1,26 @@
-package com.decursioteam.thitemstages.commands;
+package com.decursioteam.thitemstages.commands.arguments;
 
-import com.decursioteam.thitemstages.datagen.RestrictionsData;
-import com.google.common.collect.ImmutableSet;
+import com.decursioteam.thitemstages.utils.StageUtil;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-public class TooltipArgumentType implements ArgumentType<String> {
+public class StageArgumentType  implements ArgumentType<String> {
+    private Set<String> KNOWN_STAGES = null;
+    public StageArgumentType() {
+        KNOWN_STAGES = StageUtil.getStages();
+    }
 
-    private Set<String> TOOLTIP_ARGUMENTS = Set.of("ALWAYS", "NONE", "ADVANCED");
-
-    public TooltipArgumentType() {
-        // empty
+    public static String getStage(CommandContext<CommandSourceStack> ctx, String name) throws CommandSyntaxException {
+        return ctx.getArgument(name, String.class);
     }
 
     @Override
@@ -29,11 +30,12 @@ public class TooltipArgumentType implements ArgumentType<String> {
 
     @Override
     public String toString () {
-        return "type";
+        return "stage";
     }
 
-    @Override
+
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> ctx, SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggest(TOOLTIP_ARGUMENTS, builder);
+        return SharedSuggestionProvider.suggest(KNOWN_STAGES, builder);
     }
+
 }

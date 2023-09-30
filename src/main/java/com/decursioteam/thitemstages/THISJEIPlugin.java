@@ -60,34 +60,6 @@ public class THISJEIPlugin implements IModPlugin {
             restoreItems(iIngredientManager);
             collectItems(iIngredientManager);
             hideItems(iIngredientManager);
-
-            /*assert Minecraft.getInstance().level != null;
-            for (Recipe<?> recipe : Minecraft.getInstance().level.getRecipeManager().getRecipes()) {
-                AtomicBoolean shouldHide = new AtomicBoolean(false);
-                LOGGER.warn("Searching through recipes " + ForgeRegistries.RECIPE_TYPES.getKey(recipe.getType()));
-                recipe.getIngredients().forEach(ingredient -> {
-                    LOGGER.warn("Searching through recipe ingredients " + ForgeRegistries.RECIPE_TYPES.getKey(recipe.getType()));
-                    for (ItemStack itemStack : Arrays.stream(ingredient.getItems()).collect(Collectors.toList())) {
-                        for (ItemStack hiddenItem : hiddenItems) {
-                            if(itemStack.sameItem(hiddenItem)) {
-                                LOGGER.warn("Found recipe with hidden item " + ForgeRegistries.RECIPE_TYPES.getKey(recipe.getType()));
-                                shouldHide.set(true);
-                                break;
-                            }
-                        }
-                    }
-                });
-                if(shouldHide.get() || hiddenItems.contains(new ItemStack(recipe.getResultItem().getItem()))) {
-                    hiddenRecipes.put(recipe, ForgeRegistries.RECIPE_TYPES.getKey(recipe.getType()));
-                }
-            }
-            jeiRuntime.getRecipeManager().hideRecipes(hiddenRecipes, hiddenRecipes);
-
-            hiddenRecipes.forEach((iRecipe, resourceLocation) -> {
-                jeiRuntime.getRecipeManager().hideRecipes(iRecipe, resourceLocation);
-                LOGGER.warn("Hid recipe with hidden item " + iRecipe + " " + resourceLocation);
-            });
-        */
         }
     }
 

@@ -1,6 +1,5 @@
-package com.decursioteam.thitemstages.commands;
+package com.decursioteam.thitemstages.commands.arguments;
 
-import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -12,12 +11,12 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-public class RestrictionArgumentType implements ArgumentType<String> {
+public class TooltipArgumentType implements ArgumentType<String> {
 
-    private Set<String> KNOWN_RESTRICTIONS = null;
+    private final Set<String> TOOLTIP_ARGUMENTS = Set.of("ALWAYS", "NONE", "ADVANCED");
 
-    public RestrictionArgumentType() {
-        KNOWN_RESTRICTIONS = RestrictionsData.getRegistry().getRestrictions().keySet();;
+    public TooltipArgumentType() {
+        // empty
     }
 
     @Override
@@ -27,10 +26,11 @@ public class RestrictionArgumentType implements ArgumentType<String> {
 
     @Override
     public String toString () {
-        return "restriction";
+        return "type";
     }
 
+    @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> ctx, SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggest(KNOWN_RESTRICTIONS, builder);
+        return SharedSuggestionProvider.suggest(TOOLTIP_ARGUMENTS, builder);
     }
 }

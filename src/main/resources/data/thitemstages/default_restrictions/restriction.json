@@ -1,0 +1,62 @@
+{
+  "Restriction Data": {
+    "stage": "age_1",
+    "itemList": [
+      {
+        "item": "minecraft:chest",
+        "nbt": {
+          "display": {
+            "Name": "[{\"text\":\"Magic Chest\",\"italic\":false}]"
+          }
+        }
+      }
+    ],
+    "modList": [
+      "minecraft"
+    ],
+    "tagList": [
+      "minecraft:logs"
+    ],
+    "exceptionList": [
+      {
+        "item": "minecraft:chest"
+      },
+      {
+        "item": "minecraft:iron_ingot",
+        "nbt": {
+          "display": {
+            "Name": "[{\"text\":\"Magic Iron\",\"italic\":false}]"
+          }
+        }
+      },
+      {
+        "tag": "minecraft:anvil"
+      },
+      {
+        "mod": "botania"
+      }
+    ],
+    "containerList": [
+      "net.minecraft.inventory.container.WorkbenchContainer"
+    ],
+    "dimensionList": [
+      {
+        "dimension": "minecraft:the_nether",
+        "message": "You're not allowed in this dimension!"
+      }
+    ]
+  },
+  "Settings": {
+    "advancedTooltips": "ALWAYS",
+    "itemTitle": "Unavailable Item",
+    "pickupDelay": 15,
+    "hideInJEI": true,
+    "canPickup": false,
+    "containerListWhitelist": false,
+    "checkPlayerInventory": true,
+    "checkPlayerEquipment": false,
+    "destroyableBlocks": false,
+    "usableItems": false,
+    "usableBlocks": false
+  }
+}

@@ -1,5 +1,6 @@
 package com.decursioteam.thitemstages;
 
+import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.FileUtils;
 import com.google.common.collect.HashMultimap;
@@ -41,6 +42,16 @@ public class Registry {
 
     public static void registerRestrictions(String name) {
         getRestrictions().put(name, name);
+    }
+
+    public static void setupDefaultRestrictions() {
+        if (CommonConfig.generate_defaults.get()) {
+            FileUtils.setupDefaultFiles("/data/thitemstages/default_restrictions", createCustomPath("restrictions"));
+        }
+        THItemStages.LOGGER.info("Loading restrictions...");
+        FileUtils.streamFilesAndParse(createCustomPath("restrictions"), Registry::parseRestriction, "Could not stream restrictions!");
+
+        RestrictionsData.getRegistry().regenerateCustomRestrictionData();
     }
 
     public static void setupRestrictions() {
