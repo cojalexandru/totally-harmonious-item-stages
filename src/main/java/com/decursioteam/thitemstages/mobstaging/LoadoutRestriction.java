@@ -1,4 +1,4 @@
-package com.decursioteam.thitemstages.restrictions;
+package com.decursioteam.thitemstages.mobstaging;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -11,21 +11,29 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-public class ItemRestriction {
+public class LoadoutRestriction {
 
     private final ResourceLocation item;
     private CompoundTag compoundTag;
 
-    public ItemRestriction(ResourceLocation item, Optional<CompoundTag> compoundTag) {
+    private final Integer chance;
+
+    public LoadoutRestriction(ResourceLocation item, Optional<CompoundTag> compoundTag, Integer chance) {
         this.item = item;
+        this.chance = chance;
         compoundTag.ifPresent(x -> this.compoundTag = compoundTag.get());
     }
 
-    public static Codec<ItemRestriction> codec() {
+    public static Codec<LoadoutRestriction> codec() {
         return RecordCodecBuilder.create(instance -> instance.group(
-                ResourceLocation.CODEC.fieldOf("item").orElse(new ResourceLocation("")).forGetter(ItemRestriction::getResourceLocation),
-                CompoundTag.CODEC.optionalFieldOf("nbt").orElse(null).forGetter(itemRestriction -> java.util.Optional.ofNullable(itemRestriction.compoundTag))
-        ).apply(instance, ItemRestriction::new));
+                ResourceLocation.CODEC.fieldOf("item").orElse(new ResourceLocation("")).forGetter(LoadoutRestriction::getResourceLocation),
+                CompoundTag.CODEC.optionalFieldOf("nbt").orElse(null).forGetter(itemRestriction -> Optional.ofNullable(itemRestriction.compoundTag)),
+                Codec.INT.fieldOf("chance").orElse(100).forGetter(LoadoutRestriction::getChance)
+        ).apply(instance, LoadoutRestriction::new));
+    }
+
+    public Integer getChance() {
+        return Math.min(100, chance);
     }
 
     @Nullable

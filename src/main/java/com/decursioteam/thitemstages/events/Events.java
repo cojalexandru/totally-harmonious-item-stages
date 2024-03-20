@@ -4,11 +4,13 @@ import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
+import com.decursioteam.thitemstages.mobstaging.MobRestriction;
 import com.decursioteam.thitemstages.utils.StageUtil;
 import com.decursioteam.thitemstages.utils.Utils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
@@ -29,11 +31,9 @@ import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 
 import static com.decursioteam.thitemstages.utils.ResourceUtil.*;
 import static com.decursioteam.thitemstages.utils.StageUtil.hasStage;
@@ -322,8 +322,29 @@ public class Events {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onEntitySpawn(LivingSpawnEvent.CheckSpawn event) {
         if (event.getSpawnReason().equals(MobSpawnType.NATURAL)) {
-            event.setCanceled(true);
-            event.setResult(Event.Result.DENY);
+            var ref = new Object() {
+                Player closestPlayer = null;
+            };
+            for (ServerPlayer player : Objects.requireNonNull(event.getLevel().getServer()).getPlayerList().getPlayers()) {
+                if (ref.closestPlayer == null)
+                    ref.closestPlayer = player;
+                if (player.distanceTo(event.getEntity()) < ref.closestPlayer.distanceTo(event.getEntity())) {
+                    ref.closestPlayer = player;
+                }
+            }
+            ResourceLocation entityID = ForgeRegistries.ENTITY_TYPES.getKey(event.getEntity().getType());
+            Registry.getRestrictions().forEach((s, x) -> {
+                String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT);
+                List<MobRestriction> mobList = RestrictionsData.getRestrictionData(s).getData().getMobList();
+                if (hasStage(ref.closestPlayer, stage)) {
+                    mobList.forEach(e -> {
+                        if (e.getEntityID() != entityID) {
+                            event.setCanceled(true);
+                            event.setResult(Event.Result.DENY);
+                        }
+                    });
+                }
+            });
         }
     }
 }

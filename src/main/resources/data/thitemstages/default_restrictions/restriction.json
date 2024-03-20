@@ -36,6 +36,16 @@
         "mod": "botania"
       }
     ],
+    "mobList": [
+      {
+        "entityID": "minecraft:zombie",
+        "loadout": [
+          {
+            "item": "minecraft:diamond_sword"
+          }
+        ]
+      }
+    ],
     "containerList": [
       "net.minecraft.inventory.container.WorkbenchContainer"
     ],
