@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "com.decursioteam.thitemstages.mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "primitive_crafting.refmap.json",
+  "refmap": "thitemstages.refmap.json",
   "mixins": [
   ],
   "client": [

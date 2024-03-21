@@ -22,7 +22,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
-import net.minecraftforge.event.entity.living.LivingSpawnEvent;
+import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
@@ -305,7 +305,7 @@ public class Events {
 
     @SubscribeEvent
     public void onPlayerInteract(LivingAttackEvent event) {
-        if (event.getSource() != null && event.getSource().getEntity() instanceof Player player && event.isCancelable() && event.getSource().getEntity() != null && !event.getSource().getEntity().level.isClientSide && !(event.getSource().getEntity() instanceof FakePlayer)) {
+        if (event.getSource() != null && event.getSource().getEntity() instanceof Player player && event.isCancelable() && event.getSource().getEntity() != null && !event.getSource().getEntity().level().isClientSide && !(event.getSource().getEntity() instanceof FakePlayer)) {
             Registry.getRestrictions().forEach((s, x) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT);
 
@@ -320,8 +320,8 @@ public class Events {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void onEntitySpawn(LivingSpawnEvent.CheckSpawn event) {
-        if (event.getSpawnReason().equals(MobSpawnType.NATURAL)) {
+    public void onEntitySpawn(MobSpawnEvent.FinalizeSpawn event) {
+        if (event.getSpawnType().equals(MobSpawnType.NATURAL)) {
             var ref = new Object() {
                 Player closestPlayer = null;
             };
@@ -339,7 +339,7 @@ public class Events {
                 if (hasStage(ref.closestPlayer, stage)) {
                     mobList.forEach(e -> {
                         if (e.getEntityID() != entityID) {
-                            event.setCanceled(true);
+                            event.setSpawnCancelled(true);
                             event.setResult(Event.Result.DENY);
                         }
                     });

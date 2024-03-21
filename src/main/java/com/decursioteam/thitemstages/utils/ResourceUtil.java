@@ -52,10 +52,10 @@ public class ResourceUtil {
                 boolean pass = false;
                 for (ItemRestriction item : getItems(restriction)) {
                     if(item.getCompoundNBT() == null) {
-                        if(item.getItemStack().sameItem(itemStack)) pass = true;
+                        if(item.getItemStack().is(itemStack.getItem())) pass = true;
                     }
                     else if(itemStack.getTag() != null) {
-                        if(item.getItemStack().sameItem(itemStack) && item.getCompoundNBT().toString().equals(itemStack.getTag().toString())) pass = true;
+                        if(item.getItemStack().is(itemStack.getItem()) && item.getCompoundNBT().toString().equals(itemStack.getTag().toString())) pass = true;
                     }
                 }
                 return pass;
@@ -96,10 +96,10 @@ public class ResourceUtil {
         getExceptions(restriction).forEach(itemExclusion -> {
             if (itemExclusion.getResourceLocation() != null) {
                 if(itemExclusion.getCompoundNBT() == null) {
-                    if(itemExclusion.getItemStack().sameItem(itemStack)) pass.set(false);
+                    if(itemExclusion.getItemStack().is(itemStack.getItem())) pass.set(false);
                 }
                 else if(itemStack.getTag() != null) {
-                    if(itemExclusion.getItemStack().sameItem(itemStack) && itemExclusion.getCompoundNBT().toString().equals(itemStack.getTag().toString())) pass.set(false);
+                    if(itemExclusion.getItemStack().is(itemStack.getItem()) && itemExclusion.getCompoundNBT().toString().equals(itemStack.getTag().toString())) pass.set(false);
                 }
             }
             else if(itemExclusion.getMod() != null) {

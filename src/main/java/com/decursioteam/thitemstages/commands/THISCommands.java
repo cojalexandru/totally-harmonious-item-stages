@@ -22,6 +22,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.commands.synchronization.SingletonArgumentInfo;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -50,7 +51,7 @@ import static com.decursioteam.thitemstages.datagen.utils.FileUtils.restrictionE
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class THISCommands {
 
-    private static final DeferredRegister<ArgumentTypeInfo<?, ?>> COMMAND_ARGUMENT_TYPES = DeferredRegister.create(net.minecraft.core.Registry.COMMAND_ARGUMENT_TYPE_REGISTRY, THItemStages.MOD_ID);
+    private static final DeferredRegister<ArgumentTypeInfo<?, ?>> COMMAND_ARGUMENT_TYPES = DeferredRegister.create(Registries.COMMAND_ARGUMENT_TYPE, THItemStages.MOD_ID);
     private static final RegistryObject<SingletonArgumentInfo<StageArgumentType>> STAGE_ARGUMENT = COMMAND_ARGUMENT_TYPES.register("stage_argument", () -> ArgumentTypeInfos.registerByClass(StageArgumentType.class, SingletonArgumentInfo.contextFree(StageArgumentType::new)));
     private static final RegistryObject<SingletonArgumentInfo<RestrictionArgumentType>> RESTRICTION_ARGUMENT = COMMAND_ARGUMENT_TYPES.register("restriction_argument", () -> ArgumentTypeInfos.registerByClass(RestrictionArgumentType.class, SingletonArgumentInfo.contextFree(RestrictionArgumentType::new)));
 
@@ -86,17 +87,17 @@ public class THISCommands {
         return Commands.literal(key).requires(sender -> sender.hasPermission(permissions))
                 .then(Commands.argument("stage", new StageArgumentType())
                         .then(Commands.argument("advancedTooltips", new TooltipArgumentType())
-                        .then(Commands.argument("itemTitle", StringArgumentType.string())
-                        .then(Commands.argument("pickupDelay", IntegerArgumentType.integer())
-                        .then(Commands.argument("hideInJEI", BoolArgumentType.bool())
-                        .then(Commands.argument("canPickup", BoolArgumentType.bool())
-                        .then(Commands.argument("containerListWhitelist", BoolArgumentType.bool())
-                        .then(Commands.argument("checkPlayerInventory", BoolArgumentType.bool())
-                        .then(Commands.argument("checkPlayerEquipment", BoolArgumentType.bool())
-                        .then(Commands.argument("usableItems", BoolArgumentType.bool())
-                        .then(Commands.argument("usableBlocks", BoolArgumentType.bool())
-                        .then(Commands.argument("destroyableBlocks", BoolArgumentType.bool())
-                        .executes(command)))))))))))));
+                                .then(Commands.argument("itemTitle", StringArgumentType.string())
+                                        .then(Commands.argument("pickupDelay", IntegerArgumentType.integer())
+                                                .then(Commands.argument("hideInJEI", BoolArgumentType.bool())
+                                                        .then(Commands.argument("canPickup", BoolArgumentType.bool())
+                                                                .then(Commands.argument("containerListWhitelist", BoolArgumentType.bool())
+                                                                        .then(Commands.argument("checkPlayerInventory", BoolArgumentType.bool())
+                                                                                .then(Commands.argument("checkPlayerEquipment", BoolArgumentType.bool())
+                                                                                        .then(Commands.argument("usableItems", BoolArgumentType.bool())
+                                                                                                .then(Commands.argument("usableBlocks", BoolArgumentType.bool())
+                                                                                                        .then(Commands.argument("destroyableBlocks", BoolArgumentType.bool())
+                                                                                                                .executes(command)))))))))))));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> createSilentStageCommand (String key, int permissions, Command<CommandSourceStack> command, Command<CommandSourceStack> silent) {
@@ -111,12 +112,12 @@ public class THISCommands {
         RestrictionsData.getRegistry().clearRawRestrictionsData();
         Registry.setupRestrictions();
         Registry.registerRestrictionsList();
-        ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.reloadstages", StagesHandler.getStages()), true);
+        ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.reloadstages", StagesHandler.getStages()), true);
         return 0;
     }
 
     private static int listStages (CommandContext<CommandSourceStack> ctx) {
-        ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.liststages", StagesHandler.getStages()), true);
+        ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.liststages", StagesHandler.getStages()), true);
         return 0;
     }
 
@@ -130,9 +131,9 @@ public class THISCommands {
                     if(!StageUtil.hasStage(player, s)) StageUtil.addStage(player, s);
                 }
                 if (!silent || !BoolArgumentType.getBool(ctx, "silent")) {
-                    ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.addstages.success.target", stages), true);
+                    ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.addstages.success.target", stages), true);
                     if (player != ctx.getSource().getEntity()) {
-                        ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.addstages.success.sender", player.getDisplayName(), stages), true);
+                        ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.addstages.success.sender", player.getDisplayName(), stages), true);
                     }
                 }
             }
@@ -146,9 +147,9 @@ public class THISCommands {
                     return 0;
                 }
                 if (!silent || !BoolArgumentType.getBool(ctx, "silent")) {
-                    ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.addstage.success.target", stage), true);
+                    ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.addstage.success.target", stage), true);
                     if (player != ctx.getSource().getEntity()) {
-                        ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.addstage.success.sender", player.getDisplayName(), stage), true);
+                        ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.addstage.success.sender", player.getDisplayName(), stage), true);
                     }
                 }
             }
@@ -165,9 +166,9 @@ public class THISCommands {
                     if(StageUtil.hasStage(player, s)) StageUtil.removeStage(player, s);
                 }
                 if (!silent || !BoolArgumentType.getBool(ctx, "silent")) {
-                    ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.removestages.success.target", stages), true);
+                    ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.removestages.success.target", stages), true);
                     if (player != ctx.getSource().getEntity()) {
-                        ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.removestages.success.sender", player.getDisplayName(), stages), true);
+                        ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.removestages.success.sender", player.getDisplayName(), stages), true);
                     }
                 }
             }
@@ -181,9 +182,9 @@ public class THISCommands {
                     return 0;
                 }
                 if (!silent || !BoolArgumentType.getBool(ctx, "silent")) {
-                    ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.removestage.success.target", stage), true);
+                    ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.removestage.success.target", stage), true);
                     if (player != ctx.getSource().getEntity()) {
-                        ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.removestage.success.sender", player.getDisplayName(), stage), true);
+                        ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.removestage.success.sender", player.getDisplayName(), stage), true);
                     }
                 }
             }
@@ -206,7 +207,7 @@ public class THISCommands {
     private static void getPlayerStages (CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
         final String stageInfo = Objects.requireNonNull(StageUtil.getPlayerData(player)).getStages().stream().map(Object::toString).collect(Collectors.joining(", "));
         if (stageInfo.isEmpty()) ctx.getSource().sendFailure(Component.translatable("thitemstages.commands.check.failure.empty", player.getDisplayName()));
-        else ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.check.success.list", player.getDisplayName(), stageInfo), false);
+        else ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.check.success.list", player.getDisplayName(), stageInfo), false);
     }
 
     private static int giveStages(CommandContext<CommandSourceStack> ctx, boolean hasPlayer) throws CommandSyntaxException {
@@ -232,8 +233,8 @@ public class THISCommands {
 
     private static void giveStages(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
         for(final String knownStage : StageUtil.getStages()) StageUtil.addStage(player, knownStage);
-        ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.all.target"), true);
-        if(player != ctx.getSource().getEntity()) ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.all.sender", player.getDisplayName()), true);
+        ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.all.target"), true);
+        if(player != ctx.getSource().getEntity()) ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.all.sender", player.getDisplayName()), true);
     }
 
     private static int clearStages(CommandContext<CommandSourceStack> ctx, boolean hasPlayer) throws CommandSyntaxException {
@@ -244,8 +245,8 @@ public class THISCommands {
 
     private static void clearStages(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
         final int removedStages = StageUtil.clearStages(player);
-        ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.clear.target", removedStages), true);
-        if(player != ctx.getSource().getEntity()) ctx.getSource().sendSuccess(Component.translatable("thitemstages.commands.clear.sender", removedStages, player.getDisplayName()), true);
+        ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.clear.target", removedStages), true);
+        if(player != ctx.getSource().getEntity()) ctx.getSource().sendSuccess(() -> Component.translatable("thitemstages.commands.clear.sender", removedStages, player.getDisplayName()), true);
     }
 
     private static int restrictItem(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

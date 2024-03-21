@@ -1,5 +1,6 @@
-package com.decursioteam.thitemstages;
+package com.decursioteam.thitemstages.plugins;
 
+import com.decursioteam.thitemstages.Registry;
 import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
