@@ -1,22 +1,38 @@
 package com.decursioteam.thitemstages.events;
 
 import com.decursioteam.thitemstages.Registry;
+import com.decursioteam.thitemstages.THItemStages;
 import com.decursioteam.thitemstages.config.CommonConfig;
 import com.decursioteam.thitemstages.datagen.RestrictionsData;
 import com.decursioteam.thitemstages.datagen.utils.IStagesData;
+import com.decursioteam.thitemstages.mobstaging.EffectsCodec;
 import com.decursioteam.thitemstages.mobstaging.MobRestriction;
 import com.decursioteam.thitemstages.utils.StageUtil;
 import com.decursioteam.thitemstages.utils.Utils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.StructureFeatureIndexSavedData;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
@@ -31,9 +47,12 @@ import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.decursioteam.thitemstages.utils.ResourceUtil.*;
 import static com.decursioteam.thitemstages.utils.StageUtil.hasStage;
@@ -319,7 +338,7 @@ public class Events {
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    @SubscribeEvent
     public void onEntitySpawn(MobSpawnEvent.FinalizeSpawn event) {
         if (event.getSpawnType().equals(MobSpawnType.NATURAL)) {
             var ref = new Object() {
@@ -333,18 +352,114 @@ public class Events {
                 }
             }
             ResourceLocation entityID = ForgeRegistries.ENTITY_TYPES.getKey(event.getEntity().getType());
+            String entityCategory = event.getEntity().getType().getCategory().getName();
+
+            AtomicBoolean shouldSpawn = new AtomicBoolean(false);
+
             Registry.getRestrictions().forEach((s, x) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT);
                 List<MobRestriction> mobList = RestrictionsData.getRestrictionData(s).getData().getMobList();
                 if (hasStage(ref.closestPlayer, stage)) {
                     mobList.forEach(e -> {
-                        if (e.getEntityID() != entityID) {
-                            event.setSpawnCancelled(true);
-                            event.setResult(Event.Result.DENY);
+                        boolean matchesEntityID = e.getEntityID().isPresent() && e.getEntityID().get().equals(entityID);
+                        boolean matchesMobCategory = e.getMobCategory().isPresent() && e.getMobCategory().get().equals(entityCategory);
+
+                        if (matchesEntityID || matchesMobCategory) {
+                            int lightLevel = event.getEntity().level().getLightEmission(event.getEntity().blockPosition());
+                            shouldSpawn.set(true);
+                            if(e.getMaxLight().isPresent() && e.getMaxLight().get() <= lightLevel)
+                                shouldSpawn.set(false);
+                            if(e.getMinLight().isPresent() && e.getMinLight().get() >=  lightLevel)
+                                shouldSpawn.set(false);
+                            if (e.getBiomes().isPresent()) {
+                                boolean biomeMatch = e.getBiomes().get().stream()
+                                        .anyMatch(resourceLocation -> event.getEntity().level().getBiome(event.getEntity().blockPosition()).is(resourceLocation));
+                                if (!biomeMatch) {
+                                    shouldSpawn.set(false);
+                                }
+                            }
+                            if(e.getHealth().isPresent())
+                                event.getEntity().setHealth(e.getHealth().get());
+                            if (e.getEffects().isPresent()) {
+                                for (EffectsCodec effect : e.getEffects().get()) {
+                                    if (new Random().nextInt(100) < effect.getChance()) {
+                                        ResourceLocation effectLocation = effect.getResourceLocation();
+                                        int duration = effect.getDuration();
+                                        if(effect.getDuration() == 0)
+                                            duration = Integer.MAX_VALUE;
+                                        int amplifier = effect.getAmplifier();
+
+                                        MobEffect mobEffect = ForgeRegistries.MOB_EFFECTS.getValue(effectLocation);
+                                        if (mobEffect != null) {
+                                            event.getEntity().addEffect(new MobEffectInstance(mobEffect, duration, amplifier));
+                                        } else {
+
+                                            THItemStages.LOGGER.warn("Warning: Mob effect " + effectLocation + " not found in registry.");
+                                        }
+                                    }
+                                }
+                            }
+                            if (!e.getLoadoutList().isEmpty()) {
+                                e.getLoadoutList().forEach(item -> {
+                                    if(new Random().nextInt(100) < item.getChance()) {
+                                        if(item.getSlot().equals("MAINHAND")) {
+                                            event.getEntity().setItemSlot(EquipmentSlot.MAINHAND, item.getItemStack());
+                                        }
+                                        if(item.getSlot().equals("OFFHAND")) {
+                                            event.getEntity().setItemSlot(EquipmentSlot.OFFHAND, item.getItemStack());
+                                        }
+                                        if(item.getSlot().equals("FEET")) {
+                                            event.getEntity().setItemSlot(EquipmentSlot.FEET, item.getItemStack());
+                                        }
+                                        if(item.getSlot().equals("LEGS")) {
+                                            event.getEntity().setItemSlot(EquipmentSlot.LEGS, item.getItemStack());
+                                        }
+                                        if(item.getSlot().equals("CHEST")) {
+                                            event.getEntity().setItemSlot(EquipmentSlot.CHEST, item.getItemStack());
+                                        }
+                                        if(item.getSlot().equals("HEAD")) {
+                                            event.getEntity().setItemSlot(EquipmentSlot.HEAD, item.getItemStack());
+                                        }
+                                    }
+                                });
+                            }
                         }
                     });
                 }
             });
+
+            if (!shouldSpawn.get()) {
+                event.setSpawnCancelled(true);
+                event.setResult(Event.Result.DENY);
+                event.setCanceled(true);
+            }
+            else {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onDebugOverlay(CustomizeGuiOverlayEvent.DebugText event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.options.renderDebug) {
+            LocalPlayer player = mc.player;
+            if (player != null) {
+                HitResult hitResult = mc.hitResult;
+                if (hitResult == null) {
+                    hitResult = player.pick(20.0D, 0.0F, false);
+                }
+
+                if (hitResult.getType() == HitResult.Type.ENTITY) {
+                    EntityHitResult entityHitResult = (EntityHitResult) hitResult;
+                    Entity target = entityHitResult.getEntity();
+
+                    if (target instanceof LivingEntity livingTarget) {
+                        //event.getLeft().add("Entity ID: " + ForgeRegistries.ENTITY_TYPES.getKey(livingTarget.getType()));
+                        event.getRight().add("Category: " + livingTarget.getType().getCategory().getName());
+                    }
+                }
+            }
         }
     }
 }

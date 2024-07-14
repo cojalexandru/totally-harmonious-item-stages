@@ -120,7 +120,6 @@ public class THISREIPlugin implements REIClientPlugin {
             if(CommonConfig.debugMode.get()) LOGGER.info("Hiding the following items: " + this.hiddenItems);
             for (EntryStack<?> stack : this.hiddenItems) {
                 rule.hide(stack);
-                LOGGER.info("Hiding: " + stack.getIdentifier());
             }
         } else if(CommonConfig.debugMode.get()) LOGGER.warn("There are no items that are supposed to be hidden in REI");
     }

@@ -14,19 +14,22 @@ import java.util.Optional;
 public class LoadoutRestriction {
 
     private final ResourceLocation item;
+    private String slot;
     private CompoundTag compoundTag;
 
     private final Integer chance;
 
-    public LoadoutRestriction(ResourceLocation item, Optional<CompoundTag> compoundTag, Integer chance) {
+    public LoadoutRestriction(ResourceLocation item, String slot, Optional<CompoundTag> compoundTag, Integer chance) {
         this.item = item;
         this.chance = chance;
+        this.slot = slot;
         compoundTag.ifPresent(x -> this.compoundTag = compoundTag.get());
     }
 
     public static Codec<LoadoutRestriction> codec() {
         return RecordCodecBuilder.create(instance -> instance.group(
                 ResourceLocation.CODEC.fieldOf("item").orElse(new ResourceLocation("")).forGetter(LoadoutRestriction::getResourceLocation),
+                Codec.STRING.fieldOf("slot").orElse("").forGetter(LoadoutRestriction::getSlot),
                 CompoundTag.CODEC.optionalFieldOf("nbt").orElse(null).forGetter(itemRestriction -> Optional.ofNullable(itemRestriction.compoundTag)),
                 Codec.INT.fieldOf("chance").orElse(100).forGetter(LoadoutRestriction::getChance)
         ).apply(instance, LoadoutRestriction::new));
@@ -39,6 +42,10 @@ public class LoadoutRestriction {
     @Nullable
     public CompoundTag getCompoundNBT() {
         return compoundTag;
+    }
+
+    public String getSlot() {
+        return slot;
     }
 
     public ResourceLocation getResourceLocation() {

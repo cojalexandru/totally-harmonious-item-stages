@@ -39,9 +39,25 @@
     "mobList": [
       {
         "entityID": "minecraft:zombie",
+        "health": 500,
+        "minLight": 0 ,
+        "maxLight": 15,
+        "biomes": [
+          "minecraft:plains"
+        ],
+        "effects": [
+          {
+            "effect": "minecraft:strength",
+            "amplifier": 1,
+            "duration": 0,
+            "chance": 100
+          }
+        ],
         "loadout": [
           {
-            "item": "minecraft:diamond_sword"
+            "item": "minecraft:diamond_sword",
+            "slot": "MAINHAND",
+            "chance": 100
           }
         ]
       }
