@@ -7,14 +7,20 @@ import com.decursioteam.decursio_stages.mobstaging.EffectsCodec;
 import com.decursioteam.decursio_stages.mobstaging.MobRestriction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -35,9 +41,11 @@ import static com.decursioteam.decursio_stages.utils.StageUtil.hasStage;
 public class MobEvents {
 
     private final Random random = new Random();
-
+    private static final EntityDataAccessor<Float> DATA_HEALTH_ID = SynchedEntityData.defineId(LivingEntity.class, EntityDataSerializers.FLOAT);
     @SubscribeEvent
     public void onEntitySpawn(MobSpawnEvent.FinalizeSpawn event) {
+        DecursioStages.LOGGER.info("Entity spawn event triggered for: " + event.getEntity().getType().getDescription());
+
         var ref = new Object() {
             Player closestPlayer = null;
         };
@@ -50,19 +58,29 @@ public class MobEvents {
         }
 
         if (ref.closestPlayer == null) {
+            DecursioStages.LOGGER.info("No players found, exiting early");
             return; // No players, exit early
         }
+
+        DecursioStages.LOGGER.info("Closest player found: " + ref.closestPlayer.getName().getString());
 
         ResourceLocation entityID = ForgeRegistries.ENTITY_TYPES.getKey(event.getEntity().getType());
         String entityCategory = event.getEntity().getType().getCategory().getName();
         AtomicBoolean shouldSpawn = new AtomicBoolean(true); // Tracks whether to cancel the spawn
 
+        DecursioStages.LOGGER.info("Entity ID: " + entityID + ", Category: " + entityCategory);
+
         // Iterate through restrictions
         Registry.getRestrictions().forEach((s, x) -> {
             String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT);
             List<MobRestriction> mobList = RestrictionsData.getRestrictionData(s).getData().getMobList();
+
+            DecursioStages.LOGGER.info("Checking restriction stage: " + stage);
+
             // Check if player has the required stage
             if(hasStage(ref.closestPlayer, stage)) {
+                DecursioStages.LOGGER.info("Player has required stage: " + stage);
+
                 for (MobRestriction e : mobList) {
                     boolean matchesEntityID = e.getEntityID().isPresent() && e.getEntityID().get().equals(entityID);
                     boolean matchesModID = e.getEntityModID().isPresent() && e.getEntityModID().get().equals(entityID.getNamespace());
@@ -70,36 +88,55 @@ public class MobEvents {
                     boolean matchesEntityTag = e.getEntityTag().isPresent() && ForgeRegistries.ENTITY_TYPES.tags().getReverseTag(event.getEntity().getType()).isPresent() &&
                             ForgeRegistries.ENTITY_TYPES.tags().getReverseTag(event.getEntity().getType()).get().containsTag(ForgeRegistries.ENTITY_TYPES.tags().createTagKey(e.getEntityTag().get()));
 
+                    DecursioStages.LOGGER.info("Matches - EntityID: " + matchesEntityID + ", ModID: " + matchesModID + ", Category: " + matchesMobCategory + ", Tag: " + matchesEntityTag);
+
                     // Check entity ID, category, or tag
                     if (matchesEntityID || matchesMobCategory || matchesEntityTag || matchesModID) {
+                        DecursioStages.LOGGER.info("Entity matches restriction criteria");
+
                         if(e.getListType().equals("WHITELIST")) {
+                            DecursioStages.LOGGER.info("Processing WHITELIST restriction");
+
                             // Check spawn type
                             if (!e.getSpawnType().contains(event.getSpawnType())) {
+                               
                                 shouldSpawn.set(false);
                             }
-
-                            int lightLevel = event.getEntity().level().getLightEmission(event.getEntity().blockPosition());
-
+                            DecursioStages.LOGGER.info("Finished processing WHITELIST restriction 1");
+                            int lightLevel = event.getLevel().getLightEmission(event.getEntity().blockPosition());
+                            DecursioStages.LOGGER.info("Current light level: " + lightLevel);
+                            DecursioStages.LOGGER.info("Finished processing WHITELIST restriction 2");
                             // Light level restrictions
                             if (e.getMaxLight().isPresent() && e.getMaxLight().get() <= lightLevel) {
+                                DecursioStages.LOGGER.info("Light level too high. Max allowed: " + e.getMaxLight().get());
                                 shouldSpawn.set(false);
                             }
+                            DecursioStages.LOGGER.info("Finished processing WHITELIST restriction 3");
                             if (e.getMinLight().isPresent() && e.getMinLight().get() >= lightLevel) {
+                                DecursioStages.LOGGER.info("Light level too low. Min required: " + e.getMinLight().get());
                                 shouldSpawn.set(false);
                             }
-
+                            DecursioStages.LOGGER.info("Finished processing WHITELIST restriction 4");
                             // Biome checks
                             if (e.getBiomes().isPresent()) {
                                 boolean biomeMatch = e.getBiomes().get().stream()
                                         .anyMatch(resourceLocation -> event.getEntity().level().getBiome(event.getEntity().blockPosition()).is(resourceLocation));
+                                DecursioStages.LOGGER.info("Biome match: " + biomeMatch);
                                 if (!biomeMatch) {
                                     shouldSpawn.set(false);
                                 }
                             }
-
                             // Health setting
-                            e.getHealth().ifPresent(event.getEntity()::setHealth);
-
+                            e.getHealth().ifPresent(health -> {
+                                float prevMaxHealth = event.getEntity().getMaxHealth();
+                                Objects.requireNonNull(event.getEntity().getAttribute(Attributes.MAX_HEALTH)).addPermanentModifier(
+                                        new AttributeModifier(
+                                        "Max Health Modifier",  // Name
+                                        health - prevMaxHealth,           // Amount (subtracting default max health)
+                                        AttributeModifier.Operation.ADDITION  // Operation type
+                                ));
+                                event.getEntity().setHealth(health);
+                            });
                             // Effects application
                             if (e.getEffects().isPresent()) {
                                 event.setCanceled(true);
@@ -119,7 +156,6 @@ public class MobEvents {
                                     }
                                 }
                             }
-
                             // Loadout application
                             if (e.getLoadoutList().isPresent()) {
                                 event.setCanceled(true);
@@ -149,14 +185,15 @@ public class MobEvents {
                                 });
                             }
                         }
-                        else if(e.getListType().equals("BLACKLIST")){
+                        if(e.getListType().equals("BLACKLIST")){
+
                             // Check spawn type
                             if (e.getSpawnType().contains(event.getSpawnType())) {
                                 shouldSpawn.set(false);
-                                DecursioStages.LOGGER.info("Spawn type not allowed: " + event.getSpawnType().name());
                             }
 
-                            int lightLevel = event.getEntity().level().getLightEmission(event.getEntity().blockPosition());
+                            int lightLevel = event.getLevel().getLightEmission(event.getEntity().blockPosition());
+                            DecursioStages.LOGGER.info("Current light level: " + lightLevel);
 
                             // Light level restrictions
                             if (e.getMaxLight().isPresent() && e.getMaxLight().get() <= lightLevel) {
@@ -176,17 +213,15 @@ public class MobEvents {
                             }
 
                             // Health setting
-                            e.getHealth().ifPresent(event.getEntity()::setHealth);
+                            if(e.getHealth().isPresent() && event.getEntity().getMaxHealth() == e.getHealth().get().floatValue()) {
+                                shouldSpawn.set(false);
+                            }
 
                             // Effects application
                             if (e.getEffects().isPresent()) {
                                 for (EffectsCodec effect : e.getEffects().get()) {
                                     ResourceLocation effectLocation = effect.getResourceLocation();
-                                    int duration;
-                                    if (effect.getDuration() == 0) duration = Integer.MAX_VALUE;
-                                    else {
-                                        duration = effect.getDuration();
-                                    }
+                                    int duration = (effect.getDuration() == 0) ? Integer.MAX_VALUE : effect.getDuration();
                                     int amplifier = effect.getAmplifier();
 
                                     MobEffect mobEffect = ForgeRegistries.MOB_EFFECTS.getValue(effectLocation);
@@ -197,7 +232,6 @@ public class MobEvents {
                                     } else {
                                         DecursioStages.LOGGER.warn("Mob effect not found: " + effectLocation);
                                     }
-
                                 }
                             }
 
@@ -209,36 +243,42 @@ public class MobEvents {
                                             case "MAINHAND":
                                                 if(!event.getEntity().getItemBySlot(EquipmentSlot.MAINHAND).is(item.getItem()))
                                                 {
+                                                    DecursioStages.LOGGER.info("Blacklisted item found in MAINHAND");
                                                     shouldSpawn.set(false);
                                                 }
                                                 break;
                                             case "OFFHAND":
                                                 if(!event.getEntity().getItemBySlot(EquipmentSlot.OFFHAND).is(item.getItem()))
                                                 {
+                                                    DecursioStages.LOGGER.info("Blacklisted item found in OFFHAND");
                                                     shouldSpawn.set(false);
                                                 }
                                                 break;
                                             case "FEET":
                                                 if(!event.getEntity().getItemBySlot(EquipmentSlot.FEET).is(item.getItem()))
                                                 {
+                                                    DecursioStages.LOGGER.info("Blacklisted item found in FEET");
                                                     shouldSpawn.set(false);
                                                 }
                                                 break;
                                             case "LEGS":
                                                 if(!event.getEntity().getItemBySlot(EquipmentSlot.LEGS).is(item.getItem()))
                                                 {
+                                                    DecursioStages.LOGGER.info("Blacklisted item found in LEGS");
                                                     shouldSpawn.set(false);
                                                 }
                                                 break;
                                             case "CHEST":
                                                 if(!event.getEntity().getItemBySlot(EquipmentSlot.CHEST).is(item.getItem()))
                                                 {
+                                                    DecursioStages.LOGGER.info("Blacklisted item found in CHEST");
                                                     shouldSpawn.set(false);
                                                 }
                                                 break;
                                             case "HEAD":
                                                 if(!event.getEntity().getItemBySlot(EquipmentSlot.HEAD).is(item.getItem()))
                                                 {
+                                                    DecursioStages.LOGGER.info("Blacklisted item found in HEAD");
                                                     shouldSpawn.set(false);
                                                 }
                                                 break;

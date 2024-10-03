@@ -38,7 +38,7 @@
     ],
     "mobList": [
       {
-        "spawnType": ["NATURAL", "MOB_SUMMONED", "SPAWN_EGG", "COMMAND"],
+        "spawnType": ["NATURAL", "MOB_SUMMONED", "CHUNK_GENERATION", "COMMAND"],
         "whitelist_blacklist": "WHITELIST",
         "entityID": "minecraft:zombie",
         "health": 500,
