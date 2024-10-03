@@ -1,0 +1,51 @@
+{
+
+  "decursio_stages.items.dropped": "Unavailable items were dropped from your inventory!",
+  "decursio_stages.item.interact.error": "You can't use this item!",
+  "decursio_stages.block.interact.warn": "You won't be able to use this block!",
+  "decursio_stages.block.interact.error": "You can't use this block!",
+  "decursio_stages.item.pickup.error": "You can't pickup this item!",
+  "decursio_stages.block.destroy": "You can't destroy this block!",
+
+  "decursio_stages.commands.reloadstages": "Successfully reloaded the following stages: %s",
+
+  "decursio_stages.commands.liststages": "The following stages are available: %s",
+
+  "decursio_stages.commands.addstage.failure.sender": "%s already has the %s stage!",
+  "decursio_stages.commands.addstage.failure.target": "You already have the stage you were supposed to receive!",
+
+  "decursio_stages.commands.removestage.failure.sender": "%s doesn't have the %s stage!",
+  "decursio_stages.commands.removestage.failure.target": "You don't have the stage that was supposed to be removed from you!",
+
+  "decursio_stages.commands.addstage.success.sender": "%s has received the %s stage!",
+  "decursio_stages.commands.addstage.success.target": "You received the %s stage!",
+
+  "decursio_stages.commands.removestage.success.sender": "Removed the %s stage from %s!",
+  "decursio_stages.commands.removestage.success.target": "You don't have the %s stage anymore!",
+
+  "decursio_stages.commands.addstages.success.sender": "%s has received the %s stages!",
+  "decursio_stages.commands.addstages.success.target": "You received the %s stages!",
+
+  "decursio_stages.commands.removestages.success.sender": "Removed the %s stages from %s!",
+  "decursio_stages.commands.removestages.success.target": "You don't have the %s stages anymore!",
+
+  "decursio_stages.commands.check.failure.empty": "%s doesn't have any stages!",
+  "decursio_stages.commands.check.success.list": "%s has the following stages: %s!",
+
+  "decursio_stages.commands.all.target": "You received all the available stages!",
+  "decursio_stages.commands.all.sender": "%s has received all the available stages!",
+
+  "decursio_stages.commands.clear.target": "All your stages have been removed!",
+  "decursio_stages.commands.clear.sender": "Removed %s stages from %s's stage data!",
+
+  "decursio_stages.tooltip.stage.message": "This item is staged to: ",
+  "decursio_stages.tooltip.stage.left_bracket": "[",
+  "decursio_stages.tooltip.stage.right_bracket": "]",
+  "decursio_stages.tooltip.stage.stage": "%s",
+  "decursio_stages.tooltip.pickup": "You won't be able to pickup this item!",
+  "decursio_stages.tooltip.playerinventory": "This item will be dropped from your inventory!",
+  "decursio_stages.tooltip.playerequipment": "This item will be dropped from your equipment slots!",
+  "decursio_stages.tooltip.usableitems": "You won't be able to use this item!",
+  "decursio_stages.tooltip.usableblocks": "You won't be able to place or use this block!",
+  "decursio_stages.tooltip.hideinjei": "This item will be hidden in JEI!"
+}
