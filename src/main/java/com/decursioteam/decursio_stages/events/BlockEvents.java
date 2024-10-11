@@ -39,10 +39,8 @@ public class BlockEvents {
                                 ResourceLocation registryName = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(event.getLevel().getBlockState(event.getPos()).getBlock());
                                 if (!structureRestriction.getCanPlaceBlock()) {
                                     event.setCanceled(true);
-                                    player.displayClientMessage(Utils.BLOCK_INTERACT_ERROR, true);
                                 } else if (structureRestriction.getCanPlaceBlockList().stream().noneMatch(blockList -> blockList.contains(registryName))) {
                                     event.setCanceled(true);
-                                    player.displayClientMessage(Utils.BLOCK_INTERACT_ERROR, true);
                                 }
                             }
                         });
@@ -68,10 +66,8 @@ public class BlockEvents {
                                 ResourceLocation registryName = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(event.getLevel().getBlockState(event.getPos()).getBlock());
                                 if (!structureRestriction.getCanUseBlock()) {
                                     event.setUseBlock(Event.Result.DENY);
-                                    player.displayClientMessage(Utils.BLOCK_INTERACT_ERROR, true);
                                 } else if (structureRestriction.getUseBlockList().stream().noneMatch(blockList -> blockList.contains(registryName))) {
                                     event.setUseBlock(Event.Result.DENY);
-                                    player.displayClientMessage(Utils.BLOCK_INTERACT_ERROR, true);
                                 }
                             }
                         });
@@ -137,10 +133,8 @@ public class BlockEvents {
                             ResourceLocation registryName = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(event.getLevel().getBlockState(event.getPos()).getBlock());
                             if (!structureRestriction.getCanBreakBlock()) {
                                 event.setCanceled(true);
-                                event.getPlayer().displayClientMessage(Utils.BLOCK_DESTROY_ERROR, true);
                             } else if (structureRestriction.getBreakBlockList().stream().noneMatch(blockList -> blockList.contains(registryName))) {
                                 event.setCanceled(true);
-                                event.getPlayer().displayClientMessage(Utils.BLOCK_DESTROY_ERROR, true);
                             }
                         }
                     });
@@ -170,17 +164,13 @@ public class BlockEvents {
                                 ResourceLocation registryName = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(event.getLevel().getBlockState(event.getPos()).getBlock());
                                 if (!structureRestriction.getCanBreakBlock()) {
                                     event.setCanceled(true);
-                                    player.displayClientMessage(Utils.BLOCK_DESTROY_ERROR, true);
-                                } else if (structureRestriction.getBreakBlockList().stream().noneMatch(blockID -> blockID.equals(registryName))) {
+                                } else if (structureRestriction.getBreakBlockList().get().stream().noneMatch(blockID -> blockID.equals(registryName))) {
                                     event.setCanceled(true);
-                                    player.displayClientMessage(Utils.BLOCK_DESTROY_ERROR, true);
                                 }
                             }
                         });
                     }
                 }
-
-
 
                 if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableBlocks() && !hasStage(player, stage)) {
                     if (check(s, new ItemStack(event.getLevel().getBlockState(event.getPos()).getBlock().asItem()), ResourceUtil.CHECK_TYPES.ALL)) {

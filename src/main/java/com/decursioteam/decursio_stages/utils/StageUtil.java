@@ -2,6 +2,7 @@ package com.decursioteam.decursio_stages.utils;
 
 import com.decursioteam.decursio_stages.DecursioStages;
 import com.decursioteam.decursio_stages.config.CommonConfig;
+import com.decursioteam.decursio_stages.datagen.RestrictionsData;
 import com.decursioteam.decursio_stages.datagen.utils.IStagesData;
 import com.decursioteam.decursio_stages.events.UpdateStageEvent;
 import com.decursioteam.decursio_stages.network.messages.SyncStagesMessage;
@@ -150,6 +151,10 @@ public class StageUtil {
     }
 
     public static Set<String> getStages(){
-        return new HashSet<>(CommonConfig.stages.get());
+        HashSet<String> stages = new HashSet<>();
+        RestrictionsData.getRegistry().getRawRestrictions().forEach((name, rawJSON) -> {
+            stages.add(rawJSON.getAsJsonObject("Restriction Data").get("stage").getAsString());
+        });
+        return stages;
     }
 }

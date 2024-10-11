@@ -7,7 +7,10 @@
   "decursio_stages.item.pickup.error": "You can't pickup this item!",
   "decursio_stages.block.destroy": "You can't destroy this block!",
 
-  "decursio_stages.commands.reloadstages": "Successfully reloaded the following stages: %s",
+  "decursio_stages.structure.enter": "Entering a restricted structure!",
+  "decursio_stages.structure.leave": "Leaving a restricted structure.",
+
+  "decursio_stages.commands.reloadstages": "Successfully reloaded all restrictions.",
 
   "decursio_stages.commands.liststages": "The following stages are available: %s",
 
@@ -47,5 +50,7 @@
   "decursio_stages.tooltip.playerequipment": "This item will be dropped from your equipment slots!",
   "decursio_stages.tooltip.usableitems": "You won't be able to use this item!",
   "decursio_stages.tooltip.usableblocks": "You won't be able to place or use this block!",
-  "decursio_stages.tooltip.hideinjei": "This item will be hidden in JEI!"
+  "decursio_stages.tooltip.hideinjei": "This item will be hidden in JEI!",
+  "decursio_stages.commands.links.success": "The following restrictions are linked to the \"%s\" stage: %s",
+  "decursio_stages.commands.links.failure": "There are no restriction files linked to the \"%s\" stage."
 }

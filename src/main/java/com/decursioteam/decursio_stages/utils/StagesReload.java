@@ -20,7 +20,7 @@ public class StagesReload implements PreparableReloadListener {
             RestrictionsData.getRegistry().clearRawRestrictionsData();
             Registry.setupRestrictions();
             Registry.registerRestrictionsList();
-            DecursioStages.LOGGER.info(Component.translatable("decursio_stages.commands.reloadstages", StagesHandler.getStages()).toString());
+            DecursioStages.LOGGER.info(Component.translatable("decursio_stages.commands.reloadstages").getString());
         }, executor);
     }
 }

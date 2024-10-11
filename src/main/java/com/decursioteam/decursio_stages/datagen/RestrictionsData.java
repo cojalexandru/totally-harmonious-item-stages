@@ -58,7 +58,7 @@ public class RestrictionsData implements IRestrictionsData {
                 RAW_DATA.computeIfPresent(name.toLowerCase(Locale.ENGLISH).replace(" ", "_"), (s, oldVal) -> Objects.requireNonNull(restrictionCodec));
             } else RAW_DATA.computeIfAbsent(name.toLowerCase(Locale.ENGLISH).replace(" ", "_"), s -> Objects.requireNonNull(restrictionCodec));
         } catch (IllegalArgumentException e){
-            DecursioStages.LOGGER.error("There is a error with the " + name + " stage file");
+            DecursioStages.LOGGER.error("There is a error with the " + name + " restriction file");
             DecursioStages.LOGGER.error(e);
         }
     }

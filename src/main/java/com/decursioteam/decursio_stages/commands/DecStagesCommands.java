@@ -41,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -71,12 +72,16 @@ public class DecStagesCommands {
         command.then(createPlayerCommand("all", 2, ctx -> giveStages(ctx, true), ctx -> giveStages(ctx, false)));
         command.then(createRestrictCommand("restrict", 2, DecStagesCommands::restrictItem));
         command.then(createInfoCommand("reload", 2, DecStagesCommands::reloadStages));
+        command.then(createLinksCommand("links", 2, DecStagesCommands::linksCommand));
         command.then(createInfoCommand("info", 2, DecStagesCommands::listStages));
         event.getDispatcher().register(command);
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> createInfoCommand (String key, int permissions, Command<CommandSourceStack> command) {
         return Commands.literal(key).requires(sender -> sender.hasPermission(permissions)).executes(command);
+    }
+    private static LiteralArgumentBuilder<CommandSourceStack> createLinksCommand (String key, int permissions, Command<CommandSourceStack> command) {
+        return Commands.literal(key).requires(sender -> sender.hasPermission(permissions)).then(Commands.argument("stage", new StageArgumentType()).executes(command));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> createPlayerCommand (String key, int permissions, Command<CommandSourceStack> command, Command<CommandSourceStack> commandNoPlayer) {
@@ -113,6 +118,21 @@ public class DecStagesCommands {
         Registry.setupRestrictions();
         Registry.registerRestrictionsList();
         ctx.getSource().sendSuccess(() -> Component.translatable("decursio_stages.commands.reloadstages", StagesHandler.getStages()), true);
+        return 0;
+    }
+
+    private static int linksCommand (CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final String stage = StageArgumentType.getStage(ctx, "stage");
+        HashSet<String> restrictions = new HashSet<>();
+        RestrictionsData.getRegistry().getRawRestrictions().forEach((name, rawJSON) -> {
+            if(rawJSON.getAsJsonObject("Restriction Data").get("stage").getAsString().equals(stage))
+                restrictions.add("\"" + name + ".json\"");
+        });
+        if (!restrictions.isEmpty()) {
+            ctx.getSource().sendSuccess(() -> Component.translatable("decursio_stages.commands.links.success", stage, String.join(", ", restrictions.toArray(new String[0]))), true);
+        }
+        else
+            ctx.getSource().sendFailure(Component.translatable("decursio_stages.commands.links.failure", stage));
         return 0;
     }
 

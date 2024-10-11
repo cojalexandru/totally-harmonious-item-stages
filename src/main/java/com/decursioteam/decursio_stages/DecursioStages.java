@@ -1,5 +1,6 @@
 package com.decursioteam.decursio_stages;
 
+import com.decursioteam.decursio_stages.client.HUDOverlay;
 import com.decursioteam.decursio_stages.commands.DecStagesCommands;
 import com.decursioteam.decursio_stages.config.CommonConfig;
 import com.decursioteam.decursio_stages.events.*;
@@ -13,6 +14,8 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +32,7 @@ public class DecursioStages {
     public DecursioStages() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfig.config, "decursio_stages/decursio_stages.toml");
         NETWORK.registerEnqueuedMessage(SyncStagesMessage.class, ServerPacketHandler::encodeStageMessage, t -> ClientPacketHandler.decodeStageMessage(t), (t, u) -> ClientPacketHandler.processSyncStagesMessage(t, u));
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
 
         DecStagesCommands.init();
 
@@ -42,14 +46,18 @@ public class DecursioStages {
         MinecraftForge.EVENT_BUS.register(new MobEvents());
         MinecraftForge.EVENT_BUS.register(new StructureEvents());
         MinecraftForge.EVENT_BUS.register(new DimensionEvents());
-        MinecraftForge.EVENT_BUS.register(new PlayerEvents());
 
 
-
+        MinecraftForge.EVENT_BUS.register(this);
         CommonConfig.loadConfig(CommonConfig.config, FMLPaths.CONFIGDIR.get().resolve("decursio_stages/decursio_stages.toml").toString());
     }
 
-    private void registerReloadListener(AddReloadListenerEvent event){
+    private void clientSetup(final FMLClientSetupEvent event) {
+        // Register client-side event handlers
+        MinecraftForge.EVENT_BUS.register(HUDOverlay.class);
+    }
+
+    private void registerReloadListener(AddReloadListenerEvent event) {
         event.addListener(new StagesReload());
     }
 }

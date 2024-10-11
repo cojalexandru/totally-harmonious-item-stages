@@ -2,6 +2,7 @@ package com.decursioteam.decursio_stages.utils;
 
 import com.decursioteam.decursio_stages.DecursioStages;
 import com.decursioteam.decursio_stages.config.CommonConfig;
+import com.decursioteam.decursio_stages.datagen.RestrictionsData;
 import com.decursioteam.decursio_stages.datagen.StagesData;
 import com.decursioteam.decursio_stages.datagen.utils.IStagesData;
 import net.minecraft.nbt.CompoundTag;
@@ -28,7 +29,11 @@ public class StagesHandler {
     private static IStagesData clientData;
 
     public static Set<String> getStages(){
-        return new HashSet<>(CommonConfig.stages.get());
+        HashSet<String> stages = new HashSet<>();
+        RestrictionsData.getRegistry().getRawRestrictions().forEach((name, rawJSON) -> {
+            stages.add(rawJSON.getAsJsonObject("Restriction Data").get("stage").getAsString());
+        });
+        return stages;
     }
 
     @SubscribeEvent

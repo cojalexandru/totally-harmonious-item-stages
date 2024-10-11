@@ -1,18 +1,13 @@
 package com.decursioteam.decursio_stages.events;
 
-import com.decursioteam.decursio_stages.DecursioStages;
 import com.decursioteam.decursio_stages.Registry;
 import com.decursioteam.decursio_stages.datagen.RestrictionsData;
 import com.decursioteam.decursio_stages.mobstaging.EffectsCodec;
 import com.decursioteam.decursio_stages.mobstaging.MobRestriction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;

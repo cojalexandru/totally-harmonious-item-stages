@@ -1,6 +1,5 @@
 package com.decursioteam.decursio_stages;
 
-import com.decursioteam.decursio_stages.config.CommonConfig;
 import com.decursioteam.decursio_stages.datagen.RestrictionsData;
 import com.decursioteam.decursio_stages.datagen.utils.FileUtils;
 import com.google.common.collect.HashMultimap;
