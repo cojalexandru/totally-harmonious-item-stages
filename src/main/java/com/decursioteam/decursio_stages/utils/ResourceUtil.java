@@ -1,5 +1,6 @@
 package com.decursioteam.decursio_stages.utils;
 
+import com.decursioteam.decursio_stages.DecursioStages;
 import com.decursioteam.decursio_stages.datagen.RestrictionsData;
 import com.decursioteam.decursio_stages.restrictions.DimensionRestriction;
 import com.decursioteam.decursio_stages.restrictions.ItemExclusion;
@@ -55,7 +56,7 @@ public class ResourceUtil {
                         if(item.getItemStack().is(itemStack.getItem())) pass = true;
                     }
                     else if(itemStack.getTag() != null) {
-                        if(item.getItemStack().is(itemStack.getItem()) && item.getCompoundNBT().toString().equals(itemStack.getTag().toString())) pass = true;
+                        if(item.getItemStack().is(itemStack.getItem()) && NBTComparisonUtil.areNBTCompoundsEqual(item.getCompoundNBT(), itemStack.getTag())) pass = true;
                     }
                 }
                 return pass;

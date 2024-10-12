@@ -210,16 +210,16 @@ public class FileUtils
         restrictionData.add("itemList", itemList);
 
         settings.addProperty("advancedTooltips", advancedTooltips);
-        settings.addProperty("itemTitle", itemTitle);
-        settings.addProperty("pickupDelay", pickupDelay);
-        settings.addProperty("hideInJEI", hideInJEI);
-        settings.addProperty("canPickup", canPickup);
+        settings.addProperty("itemsTitle", itemTitle);
+        settings.addProperty("itemsPickupDelay", pickupDelay);
+        settings.addProperty("hideInJEI_REI", hideInJEI);
+        settings.addProperty("canPickupItems", canPickup);
         settings.addProperty("containerListWhitelist", containerListWhitelist);
-        settings.addProperty("checkPlayerInventory", checkPlayerInventory);
-        settings.addProperty("checkPlayerEquipment", checkPlayerEquipment);
-        settings.addProperty("usableItems", usableItems);
-        settings.addProperty("destroyableBlocks", destroyableBlocks);
-        settings.addProperty("usableBlocks", usableBlocks);
+        settings.addProperty("dropItemsFromInventory", checkPlayerInventory);
+        settings.addProperty("dropArmorFromInventory", checkPlayerEquipment);
+        settings.addProperty("canUseItems", usableItems);
+        settings.addProperty("canBreakBlocks", destroyableBlocks);
+        settings.addProperty("canRightClickBlocks", usableBlocks);
 
 
         String jsonOutput = gson.toJson(jsonFile);
