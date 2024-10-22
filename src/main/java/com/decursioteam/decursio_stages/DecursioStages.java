@@ -4,6 +4,7 @@ import com.decursioteam.decursio_stages.client.HUDOverlay;
 import com.decursioteam.decursio_stages.commands.DecStagesCommands;
 import com.decursioteam.decursio_stages.config.CommonConfig;
 import com.decursioteam.decursio_stages.events.*;
+import com.decursioteam.decursio_stages.events.ore_staging.ModelBakeEventHandler;
 import com.decursioteam.decursio_stages.network.ClientPacketHandler;
 import com.decursioteam.decursio_stages.network.ServerPacketHandler;
 import com.decursioteam.decursio_stages.network.messages.SyncStagesMessage;

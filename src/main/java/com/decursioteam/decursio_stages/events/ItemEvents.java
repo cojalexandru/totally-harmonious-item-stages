@@ -80,7 +80,7 @@ public class ItemEvents {
                 }
 
                 if (itemStack != null) {
-                    if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle().isEmpty()) {
+                    if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle().isEmpty()) { // TODO
                         event.getToolTip().set(0, Component.literal(RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle()));
                     }
                     event.getToolTip().add(Component.translatable("decursio_stages.tooltip.stage.message").withStyle(ChatFormatting.DARK_PURPLE).withStyle(ChatFormatting.BOLD)
