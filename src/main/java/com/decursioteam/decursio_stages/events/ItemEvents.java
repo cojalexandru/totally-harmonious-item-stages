@@ -36,8 +36,7 @@ public class ItemEvents {
         if (event.getEntity() != null) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             ItemStack item = event.getItem().getItem();
-            Registry.getRestrictions().forEach((s, entityType) -> {
-                String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT).toLowerCase(Locale.ROOT);
+            Registry.getRestrictions().forEach((s) -> {                String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT).toLowerCase(Locale.ROOT);
                 if (!hasStage(player, stage) && player.containerMenu != player.inventoryMenu) {
                     if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getContainerListWhitelist()) {
                         if (getContainers(s).contains(player.containerMenu.getClass().getName())) {
@@ -69,7 +68,7 @@ public class ItemEvents {
         final IStagesData stageData = StageUtil.getPlayerData(player);
         if (stageData == null) return;
         final ArrayList<String> playerStages = stageData.getStages();
-        Registry.getRestrictions().forEach((s, x) -> {
+        Registry.getRestrictions().forEach((s) -> {
             String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT).toLowerCase(Locale.ROOT);
             if (RestrictionsData.getRestrictionData(s).getSettingsCodec().getAdvancedTooltips().equals("NONE")) return;
             if ((RestrictionsData.getRestrictionData(s).getSettingsCodec().getAdvancedTooltips().equals("ADVANCED") && !playerStages.contains(stage) && event.getFlags().isAdvanced()) || !playerStages.contains(stage) && RestrictionsData.getRestrictionData(s).getSettingsCodec().getAdvancedTooltips().equals("ALWAYS")) {
@@ -80,7 +79,7 @@ public class ItemEvents {
                 }
 
                 if (itemStack != null) {
-                    if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle().isEmpty()) { // TODO
+                    if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle().isEmpty()) {
                         event.getToolTip().set(0, Component.literal(RestrictionsData.getRestrictionData(s).getSettingsCodec().getItemTitle()));
                     }
                     event.getToolTip().add(Component.translatable("decursio_stages.tooltip.stage.message").withStyle(ChatFormatting.DARK_PURPLE).withStyle(ChatFormatting.BOLD)
@@ -115,7 +114,7 @@ public class ItemEvents {
     public void onPlayerInteractWithItem(PlayerInteractEvent.RightClickItem event) {
         if (event.getEntity() != null) {
             Player player = event.getEntity();
-            Registry.getRestrictions().forEach((s, x) -> {
+            Registry.getRestrictions().forEach((s) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT);
 
                 if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, stage)) {
@@ -131,7 +130,7 @@ public class ItemEvents {
     @SubscribeEvent
     public void onPlayerAttack(LivingAttackEvent event) {
         if (event.getSource() != null && event.getSource().getEntity() instanceof Player player && event.isCancelable() && event.getSource().getEntity() != null && !event.getSource().getEntity().level().isClientSide && !(event.getSource().getEntity() instanceof FakePlayer)) {
-            Registry.getRestrictions().forEach((s, x) -> {
+            Registry.getRestrictions().forEach((s) -> {
                 String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT);
 
                 if (!RestrictionsData.getRestrictionData(s).getSettingsCodec().getUsableItems() && !hasStage(player, stage)) {

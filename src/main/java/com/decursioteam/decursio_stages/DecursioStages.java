@@ -1,12 +1,15 @@
 package com.decursioteam.decursio_stages;
 
 import com.decursioteam.decursio_stages.client.HUDOverlay;
+import com.decursioteam.decursio_stages.client.screens.RestrictMenu;
 import com.decursioteam.decursio_stages.commands.DecStagesCommands;
 import com.decursioteam.decursio_stages.config.CommonConfig;
 import com.decursioteam.decursio_stages.events.*;
-import com.decursioteam.decursio_stages.events.ore_staging.ModelBakeEventHandler;
 import com.decursioteam.decursio_stages.network.ClientPacketHandler;
+import com.decursioteam.decursio_stages.network.MessageHandlers;
 import com.decursioteam.decursio_stages.network.ServerPacketHandler;
+import com.decursioteam.decursio_stages.network.messages.OpenRestrictScreenMessage;
+import com.decursioteam.decursio_stages.network.messages.SaveRestrictionMessage;
 import com.decursioteam.decursio_stages.network.messages.SyncStagesMessage;
 import com.decursioteam.decursio_stages.utils.NetworkUtil;
 import com.decursioteam.decursio_stages.utils.StagesReload;
@@ -32,7 +35,23 @@ public class DecursioStages {
 
     public DecursioStages() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfig.config, "decursio_stages/decursio_stages.toml");
-        NETWORK.registerEnqueuedMessage(SyncStagesMessage.class, ServerPacketHandler::encodeStageMessage, t -> ClientPacketHandler.decodeStageMessage(t), (t, u) -> ClientPacketHandler.processSyncStagesMessage(t, u));
+        RestrictMenu.MENU_TYPES.register(FMLJavaModLoadingContext.get().getModEventBus());
+
+        NETWORK.registerEnqueuedMessage(SyncStagesMessage.class,
+                ServerPacketHandler::encodeStageMessage,
+                ClientPacketHandler::decodeStageMessage,
+                ClientPacketHandler::processSyncStagesMessage);
+
+        NETWORK.registerEnqueuedMessage(OpenRestrictScreenMessage.class,
+                ServerPacketHandler::encodeOpenRestrictScreenMessage,
+                ClientPacketHandler::decodeOpenRestrictScreenMessage,
+                MessageHandlers::handleOpenRestrictScreen);
+
+        NETWORK.registerEnqueuedMessage(SaveRestrictionMessage.class,
+                ServerPacketHandler::encodeSaveRestrictionMessage,
+                ClientPacketHandler::decodeSaveRestrictionMessage,
+                MessageHandlers::handleSaveRestriction);
+
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
 
         DecStagesCommands.init();

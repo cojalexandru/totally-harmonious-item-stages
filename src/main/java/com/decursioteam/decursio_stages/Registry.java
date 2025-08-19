@@ -9,6 +9,8 @@ import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 
@@ -26,13 +28,17 @@ import java.util.Set;
 public class Registry {
 
     public static final Gson GSON = new Gson();
-    private static final Multimap<String, String> RESTRICTIONS = HashMultimap.create();
+    private static final Set<String> RESTRICTIONS = new HashSet<>();
     public static Set<String> getRestrictionsHashSet() {
-        return new HashSet<>(RESTRICTIONS.values());
+        return new HashSet<>(RESTRICTIONS);
     }
 
-    public static Multimap<String, String> getRestrictions() {
+    public static Set<String> getRestrictions() {
         return RESTRICTIONS;
+    }
+
+    public static void clearRestrictions(){
+        RESTRICTIONS.clear();
     }
 
     public static void registerRestrictionsList() {
@@ -40,11 +46,14 @@ public class Registry {
     }
 
     public static void registerRestrictions(String name) {
-        getRestrictions().put(name, name);
+        getRestrictions().add(name);
     }
 
     public static void setupRestrictions() {
         DecursioStages.LOGGER.info("Loading restrictions...");
+        Registry.clearRestrictions();
+        RestrictionsData.getRegistry().clearRawRestrictionsData();
+        RestrictionsData.getRegistry().clearCustomRestrictionData();
         FileUtils.streamFilesAndParse(createCustomPath("restrictions"), Registry::parseRestriction, "Could not stream restrictions!");
 
         RestrictionsData.getRegistry().regenerateCustomRestrictionData();

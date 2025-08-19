@@ -22,6 +22,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -33,6 +34,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.decursioteam.decursio_stages.utils.ResourceUtil.getApplyToFakePlayer;
 import static com.decursioteam.decursio_stages.utils.StageUtil.hasStage;
 
 public class MobEvents {
@@ -61,9 +63,11 @@ public class MobEvents {
         AtomicBoolean shouldSpawn = new AtomicBoolean(true); // Tracks whether to cancel the spawn
 
         // Iterate through restrictions
-        Registry.getRestrictions().forEach((s, x) -> {
-            String stage = RestrictionsData.getRestrictionData(s).getData().getStage().toLowerCase(Locale.ROOT);
-            List<MobRestriction> mobList = RestrictionsData.getRestrictionData(s).getData().getMobList();
+        Registry.getRestrictions().forEach(restriction -> {
+            if(!getApplyToFakePlayer(restriction) && ref.closestPlayer instanceof FakePlayer) return;
+
+            String stage = RestrictionsData.getRestrictionData(restriction).getData().getStage().toLowerCase(Locale.ROOT);
+            List<MobRestriction> mobList = RestrictionsData.getRestrictionData(restriction).getData().getMobList();
 
             // Check if player has the required stage
             if(hasStage(ref.closestPlayer, stage)) {
@@ -252,7 +256,7 @@ public class MobEvents {
                             }
                         }
                     } else {
-                        shouldSpawn.set(true); // No match found, spawn
+                        // No match found, spawn
                     }
                 }
             }

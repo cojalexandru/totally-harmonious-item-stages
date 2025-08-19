@@ -32,6 +32,10 @@ public class RestrictionsData implements IRestrictionsData {
         return RAW_DATA.get(name);
     }
 
+    public void clearCustomRestrictionData() {
+        CUSTOM_DATA.clear();
+    }
+
     @Override
     public Map<String, Restrictions> getRestrictions() {
         return Collections.unmodifiableMap(CUSTOM_DATA);

@@ -7,7 +7,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
-@OnlyIn(Dist.CLIENT)
 public class SyncStagesEvent extends PlayerEvent {
 
     private final IStagesData data;

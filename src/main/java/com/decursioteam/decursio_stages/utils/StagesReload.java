@@ -3,10 +3,12 @@ package com.decursioteam.decursio_stages.utils;
 import com.decursioteam.decursio_stages.Registry;
 import com.decursioteam.decursio_stages.DecursioStages;
 import com.decursioteam.decursio_stages.datagen.RestrictionsData;
+import com.decursioteam.decursio_stages.events.SyncStagesEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraftforge.common.MinecraftForge;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;

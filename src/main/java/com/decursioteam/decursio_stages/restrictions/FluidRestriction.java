@@ -7,24 +7,23 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-public class ItemExclusion {
+public class FluidRestriction {
 
-    private ResourceLocation item;
-    private CompoundTag compoundTag;
+    private ResourceLocation fluid;
     private String mod;
     private ResourceLocation tag;
 
-    public ItemExclusion(Optional<ResourceLocation> item, Optional<CompoundTag> compoundTag, Optional<ResourceLocation> tag, Optional<String> mod){
+    public FluidRestriction(Optional<ResourceLocation> fluid, Optional<ResourceLocation> tag, Optional<String> mod){
         try {
-            item.ifPresent(x -> this.item = item.get());
+            fluid.ifPresent(x -> this.fluid = fluid.get());
             tag.ifPresent(x -> this.tag = tag.get());
             mod.ifPresent(x -> this.mod = mod.get());
-            compoundTag.ifPresent(x -> this.compoundTag = compoundTag.get());
         }
         catch (NullPointerException e)
         {
@@ -33,18 +32,12 @@ public class ItemExclusion {
 
     }
 
-    public static Codec<ItemExclusion> codec() {
+    public static Codec<FluidRestriction> codec() {
         return RecordCodecBuilder.create(instance -> instance.group(
-                ResourceLocation.CODEC.optionalFieldOf("item").orElse(null).forGetter(itemExclusion -> Optional.ofNullable(itemExclusion.item)),
-                CompoundTag.CODEC.optionalFieldOf("nbt").orElse(null).forGetter(itemExclusion -> Optional.ofNullable(itemExclusion.compoundTag)),
+                ResourceLocation.CODEC.optionalFieldOf("fluid").orElse(null).forGetter(itemExclusion -> Optional.ofNullable(itemExclusion.fluid)),
                 ResourceLocation.CODEC.optionalFieldOf("tag").orElse(null).forGetter(itemExclusion -> Optional.ofNullable(itemExclusion.tag)),
                 Codec.STRING.optionalFieldOf("mod").orElse(null).forGetter(itemExclusion -> Optional.ofNullable(itemExclusion.mod))
-        ).apply(instance, ItemExclusion::new));
-    }
-
-    @Nullable
-    public CompoundTag getCompoundNBT() {
-        return compoundTag;
+        ).apply(instance, FluidRestriction::new));
     }
 
     @Nullable
@@ -59,18 +52,14 @@ public class ItemExclusion {
 
     @Nullable
     public ResourceLocation getResourceLocation() {
-        return item;
+        return fluid;
     }
 
     @Nullable
-    public Item getItem() {
-        return ForgeRegistries.ITEMS.getValue(item);
-    }
-
-    @Nullable
-    public ItemStack getItemStack() {
-        ItemStack itemStack = new ItemStack(getItem());
-        if(getCompoundNBT() != null) itemStack.setTag(getCompoundNBT());
-        return itemStack;
+    public Fluid getFluid() {
+        if (fluid == null) {
+            return null;
+        }
+        return ForgeRegistries.FLUIDS.getValue(fluid);
     }
 }

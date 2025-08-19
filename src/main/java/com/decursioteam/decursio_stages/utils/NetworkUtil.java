@@ -1,5 +1,6 @@
 package com.decursioteam.decursio_stages.utils;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

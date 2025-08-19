@@ -89,11 +89,16 @@ dependencies {
 
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    compileOnly fg.deobf("curse.maven:jei-238222:5101366")
-    implementation fg.deobf("curse.maven:rei-310111:4951142")
-    implementation fg.deobf("curse.maven:cloth-348521:4973441")
-    implementation fg.deobf("curse.maven:reicompat-521393:4837449")
-    implementation fg.deobf("curse.maven:architectury-419699:5137938")
+    implementation fg.deobf("curse.maven:jei-238222:5846810")
+    compileOnly fg.deobf("curse.maven:rei-310111:4951142")
+    compileOnly fg.deobf("curse.maven:cloth-348521:4973441")
+    compileOnly fg.deobf("curse.maven:reicompat-521393:4837449")
+    compileOnly fg.deobf("curse.maven:emi-580555:6420945")
+
+    compileOnly fg.deobf("curse.maven:architectury-419699:5137938")
+    compileOnly fg.deobf("curse.maven:ftbquests-289412:6431737")
+    compileOnly fg.deobf("curse.maven:ftblibrary-404465:6164053")
+    compileOnly fg.deobf("curse.maven:ftbteams-404468:6130786")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 

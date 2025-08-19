@@ -7,6 +7,8 @@ import com.decursioteam.decursio_stages.commands.arguments.StageArgumentType;
 import com.decursioteam.decursio_stages.commands.arguments.TooltipArgumentType;
 import com.decursioteam.decursio_stages.datagen.RestrictionsData;
 import com.decursioteam.decursio_stages.datagen.utils.FileUtils;
+import com.decursioteam.decursio_stages.network.messages.OpenRestrictScreenMessage;
+import com.decursioteam.decursio_stages.utils.ResourceUtil;
 import com.decursioteam.decursio_stages.utils.StageUtil;
 import com.decursioteam.decursio_stages.utils.StagesHandler;
 import com.mojang.brigadier.Command;
@@ -16,8 +18,10 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
@@ -27,6 +31,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -74,6 +79,26 @@ public class DecStagesCommands {
         command.then(createInfoCommand("reload", 2, DecStagesCommands::reloadStages));
         command.then(createLinksCommand("links", 2, DecStagesCommands::linksCommand));
         command.then(createInfoCommand("info", 2, DecStagesCommands::listStages));
+        command.then(Commands.literal("gui").requires(sender -> sender.hasPermission(2))
+                .executes(ctx -> {
+                    try {
+                        ServerPlayer player = ctx.getSource().getPlayerOrException();
+
+                        // Generate a window ID - this is essential for item handling
+                        int windowId = player.containerCounter;
+
+                        DecursioStages.LOGGER.info("OpenRestrictScreenCommand: Opening screen for {} with windowId={}",
+                                player.getName().getString(), windowId);
+
+                        // Tell client to open screen with the designated window ID
+                        DecursioStages.NETWORK.sendToPlayer(player, new OpenRestrictScreenMessage(windowId));
+
+                        return Command.SINGLE_SUCCESS;
+                    } catch (Exception e) {
+                        DecursioStages.LOGGER.error("OpenRestrictScreenCommand: Error executing command", e);
+                        return 0;
+                    }
+                }));
         event.getDispatcher().register(command);
     }
 
@@ -88,12 +113,18 @@ public class DecStagesCommands {
         return Commands.literal(key).requires(sender -> sender.hasPermission(permissions)).executes(commandNoPlayer).then(Commands.argument("targets", EntityArgument.player()).executes(command));
     }
 
-    private static LiteralArgumentBuilder<CommandSourceStack> createRestrictCommand (String key, int permissions, Command<CommandSourceStack> command) {
+    private static LiteralArgumentBuilder<CommandSourceStack> createRestrictCommand(String key, int permissions, Command<CommandSourceStack> command) {
         return Commands.literal(key).requires(sender -> sender.hasPermission(permissions))
                 .then(Commands.argument("stage", new StageArgumentType())
                         .then(Commands.argument("advancedTooltips", new TooltipArgumentType())
                                 .then(Commands.argument("itemTitle", StringArgumentType.string())
-                                        .then(Commands.argument("pickupDelay", IntegerArgumentType.integer())
+                                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(Arrays.asList(
+                                                        "\"Locked Item\"",
+                                                        "\"Requires " + StageArgumentType.getStage(context, "stage") + "\"",
+                                                        "\"Stage: " + StageArgumentType.getStage(context, "stage") + "\""),
+                                                builder))
+                                        .then(Commands.argument("pickupDelay", IntegerArgumentType.integer(0))
+                                                .suggests((context, builder) -> SharedSuggestionProvider.suggest(Arrays.asList("40", "20", "0"), builder))
                                                 .then(Commands.argument("hideInJEI", BoolArgumentType.bool())
                                                         .then(Commands.argument("canPickup", BoolArgumentType.bool())
                                                                 .then(Commands.argument("containerListWhitelist", BoolArgumentType.bool())
@@ -104,6 +135,7 @@ public class DecStagesCommands {
                                                                                                         .then(Commands.argument("destroyableBlocks", BoolArgumentType.bool())
                                                                                                                 .executes(command)))))))))))));
     }
+
 
     private static LiteralArgumentBuilder<CommandSourceStack> createSilentStageCommand (String key, int permissions, Command<CommandSourceStack> command, Command<CommandSourceStack> silent) {
         return Commands.literal(key).requires(sender -> sender.hasPermission(permissions))
@@ -117,6 +149,7 @@ public class DecStagesCommands {
         RestrictionsData.getRegistry().clearRawRestrictionsData();
         Registry.setupRestrictions();
         Registry.registerRestrictionsList();
+
         ctx.getSource().sendSuccess(() -> Component.translatable("decursio_stages.commands.reloadstages", StagesHandler.getStages()), true);
         return 0;
     }
@@ -284,24 +317,50 @@ public class DecStagesCommands {
         final boolean destroyableBlocks = BoolArgumentType.getBool(ctx, "destroyableBlocks");
 
         Player player = ctx.getSource().getPlayerOrException();
+        ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
+
+        if (heldItem.isEmpty()) {
+            ctx.getSource().sendFailure(Component.translatable("decursio_stages.commands.restrictitem.failure.empty_hand"));
+            return 0;
+        }
+
+        String itemName = ResourceUtil.getRegistryName(heldItem.getItem()).toString();
+
+
         AtomicInteger counter = new AtomicInteger();
         RestrictionsData.getRegistry().getRawRestrictions().forEach((restriction, x) -> {
-            if(restrictionExists(restriction, stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks))
-            {
-                /*for (ItemStack item : player.inventoryMenu.getItems()) {
-                    if(!item.is(ItemStack.EMPTY.getItem())) {
-                        FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks, item);
-                    }
-                }*/
-                FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks, player.getItemInHand(InteractionHand.MAIN_HAND));
+            if (restrictionExists(restriction, stage, advancedTooltips, itemTitle, pickupDelay,
+                    hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory,
+                    checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks)) { // Also check by expected ID
+
+                FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI,
+                        canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment,
+                        usableItems, usableBlocks, destroyableBlocks, heldItem);
                 counter.getAndIncrement();
             }
         });
-        if(!(counter.get() > 0)){
-            FileUtils.addRestriction(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks);
-            FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI, canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment, usableItems, usableBlocks, destroyableBlocks, player.getItemInHand(InteractionHand.MAIN_HAND));
+
+        if (counter.get() == 0) {
+            FileUtils.addRestriction(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI,
+                    canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment,
+                    usableItems, usableBlocks, destroyableBlocks);
+
+            FileUtils.restrictItem(stage, advancedTooltips, itemTitle, pickupDelay, hideInJEI,
+                    canPickup, containerListWhitelist, checkPlayerInventory, checkPlayerEquipment,
+                    usableItems, usableBlocks, destroyableBlocks, heldItem);
         }
-        return 0;
+
+        Component itemComponent = Component.literal(itemName).withStyle(ChatFormatting.AQUA);
+        Component stageComponent = Component.literal(stage).withStyle(ChatFormatting.DARK_PURPLE);
+
+        ctx.getSource().sendSuccess(() -> Component.translatable(
+                "decursio_stages.commands.restrictitem.success",
+                itemComponent, stageComponent), true);
+
+        Registry.setupRestrictions();
+        Registry.registerRestrictionsList();
+
+        return 1;
     }
 
 }

@@ -1,10 +1,7 @@
 package com.decursioteam.decursio_stages.codec;
 
 import com.decursioteam.decursio_stages.mobstaging.MobRestriction;
-import com.decursioteam.decursio_stages.restrictions.DimensionRestriction;
-import com.decursioteam.decursio_stages.restrictions.ItemExclusion;
-import com.decursioteam.decursio_stages.restrictions.ItemRestriction;
-import com.decursioteam.decursio_stages.restrictions.StructureRestriction;
+import com.decursioteam.decursio_stages.restrictions.*;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Decoder;
 import com.mojang.serialization.Encoder;
@@ -22,7 +19,7 @@ public class RestrictionCodec {
     protected final List<DimensionRestriction> dimensionList;
     protected final List<StructureRestriction> structureList;
     protected final List<ResourceLocation> tagList;
-
+    protected final List<FluidRestriction> fluidList;
     protected final List<MobRestriction> mobList;
     protected final List<String> modList;
     protected final List<String> containerList;
@@ -30,10 +27,11 @@ public class RestrictionCodec {
     protected String name;
     protected String stage;
 
-    private RestrictionCodec(String name, String stage, List<ItemRestriction> itemList, List<ResourceLocation> tagList, List<MobRestriction> mobList, List<DimensionRestriction> dimensionList,  List<StructureRestriction> structureList, List<String> modList, List<String> containerList, List<ItemExclusion> exceptionList) {
+    private RestrictionCodec(String name, String stage, List<ItemRestriction> itemList, List<FluidRestriction> fluidList, List<ResourceLocation> tagList, List<MobRestriction> mobList, List<DimensionRestriction> dimensionList,  List<StructureRestriction> structureList, List<String> modList, List<String> containerList, List<ItemExclusion> exceptionList) {
         this.name = name;
         this.stage = stage;
         this.itemList = itemList;
+        this.fluidList = fluidList;
         this.tagList = tagList;
         this.mobList = mobList;
         this.dimensionList = dimensionList;
@@ -46,6 +44,7 @@ public class RestrictionCodec {
     private RestrictionCodec(String name) {
         this.name = name;
         this.itemList = new ArrayList<>();
+        this.fluidList = new ArrayList<>();
         this.dimensionList = new ArrayList<>();
         this.tagList = new ArrayList<>();
         this.mobList = new ArrayList<>();
@@ -60,6 +59,7 @@ public class RestrictionCodec {
                 MapCodec.of(Encoder.empty(), Decoder.unit(() -> name)).forGetter(RestrictionCodec::getName),
                 Codec.STRING.fieldOf("stage").orElse("").forGetter(RestrictionCodec::getStage),
                 ItemRestriction.codec().listOf().fieldOf("itemList").orElse(List.of()).forGetter(RestrictionCodec::getItemList),
+                FluidRestriction.codec().listOf().fieldOf("fluidList").orElse(List.of()).forGetter(RestrictionCodec::getFluidList),
                 ResourceLocation.CODEC.listOf().fieldOf("tagList").orElse(List.of()).forGetter(RestrictionCodec::getTagList),
                 MobRestriction.codec().listOf().fieldOf("mobList").orElse(List.of()).forGetter(RestrictionCodec::getMobList),
                 DimensionRestriction.codec().listOf().fieldOf("dimensionList").orElse(List.of()).forGetter(RestrictionCodec::getDimensionList),
@@ -68,6 +68,10 @@ public class RestrictionCodec {
                 Codec.STRING.listOf().fieldOf("containerList").orElse(List.of()).forGetter(RestrictionCodec::getContainerList),
                 ItemExclusion.codec().listOf().fieldOf("exceptionList").orElse(List.of()).forGetter(RestrictionCodec::getExceptionList)
         ).apply(instance, RestrictionCodec::new));
+    }
+
+    public List<FluidRestriction> getFluidList() {
+        return fluidList;
     }
 
     public List<MobRestriction> getMobList() {
@@ -117,8 +121,8 @@ public class RestrictionCodec {
 
     public static class Mutable extends RestrictionCodec {
 
-        public Mutable(String name, String stage, List<ItemRestriction> itemList, List<ResourceLocation> tagList, List<MobRestriction> mobList, List<DimensionRestriction> dimensionList, List<StructureRestriction> structureList, List<String> modList, List<String> containerList, List<ItemExclusion> exceptionList) {
-            super(name, stage, itemList, tagList, mobList, dimensionList, structureList, modList, containerList, exceptionList);
+        public Mutable(String name, String stage, List<ItemRestriction> itemList, List<FluidRestriction> fluidList, List<ResourceLocation> tagList, List<MobRestriction> mobList, List<DimensionRestriction> dimensionList, List<StructureRestriction> structureList, List<String> modList, List<String> containerList, List<ItemExclusion> exceptionList) {
+            super(name, stage, itemList, fluidList, tagList, mobList, dimensionList, structureList, modList, containerList, exceptionList);
         }
 
         public Mutable(String name) {
@@ -132,7 +136,7 @@ public class RestrictionCodec {
 
         @Override
         public RestrictionCodec toImmutable() {
-            return new RestrictionCodec(this.name, this.stage, this.itemList, tagList, this.mobList, this.dimensionList, this.structureList, this.modList, this.containerList, this.exceptionList);
+            return new RestrictionCodec(this.name, this.stage, this.itemList, this.fluidList, tagList, this.mobList, this.dimensionList, this.structureList, this.modList, this.containerList, this.exceptionList);
         }
     }
 }

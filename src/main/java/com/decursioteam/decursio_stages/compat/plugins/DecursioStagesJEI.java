@@ -1,14 +1,16 @@
-package com.decursioteam.decursio_stages.plugins;
+package com.decursioteam.decursio_stages.compat.plugins;
 
 import com.decursioteam.decursio_stages.Registry;
 import com.decursioteam.decursio_stages.config.CommonConfig;
 import com.decursioteam.decursio_stages.datagen.RestrictionsData;
 import com.decursioteam.decursio_stages.datagen.utils.IStagesData;
 import com.decursioteam.decursio_stages.events.SyncStagesEvent;
+import com.decursioteam.decursio_stages.restrictions.FluidRestriction;
 import com.decursioteam.decursio_stages.utils.StageUtil;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.forge.ForgeTypes;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
@@ -19,11 +21,15 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraftforge.client.event.RecipesUpdatedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.util.thread.EffectiveSide;
+import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import static com.decursioteam.decursio_stages.DecursioStages.LOGGER;
 import static com.decursioteam.decursio_stages.DecursioStages.MOD_ID;
@@ -33,6 +39,7 @@ import static com.decursioteam.decursio_stages.utils.ResourceUtil.*;
 public class DecursioStagesJEI implements IModPlugin {
 
     private final List<ItemStack> hiddenItems = new ArrayList<>();
+    private final List<FluidStack> hiddenFluids = new ArrayList<>();
     private final HashMap<Recipe<?>, ResourceLocation> hiddenRecipes = new HashMap<>();
     private IJeiRuntime jeiRuntime;
 
@@ -44,12 +51,12 @@ public class DecursioStagesJEI implements IModPlugin {
     }
 
     @Override
-    public void onRuntimeAvailable (IJeiRuntime jeiRuntime) {
+    public void onRuntimeAvailable (@NotNull IJeiRuntime jeiRuntime) {
         this.jeiRuntime = jeiRuntime;
     }
 
     @Override
-    public ResourceLocation getPluginUid() {
+    public @NotNull ResourceLocation getPluginUid() {
         return new ResourceLocation(MOD_ID, "main");
     }
 
@@ -58,28 +65,58 @@ public class DecursioStagesJEI implements IModPlugin {
 
             final IIngredientManager iIngredientManager = this.jeiRuntime.getIngredientManager();
 
-            restoreItems(iIngredientManager);
-            collectItems(iIngredientManager);
-            hideItems(iIngredientManager);
+            restoreResources(iIngredientManager);
+            collectResources(iIngredientManager);
+            hideResources(iIngredientManager);
         }
     }
 
-    private void restoreItems(IIngredientManager iIngredientManager) {
-        if (!this.hiddenItems.isEmpty()) {
-            if(CommonConfig.debugMode.get()) LOGGER.info("Restoring the following items at runtime: " + this.hiddenItems);
-            iIngredientManager.addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, this.hiddenItems);
+    private void restoreResources(IIngredientManager iIngredientManager) {
+        if (!this.hiddenItems.isEmpty() || !this.hiddenFluids.isEmpty()) {
+            if(CommonConfig.debugMode.get())
+                LOGGER.info("Restoring the following items at runtime: {}", this.hiddenItems);
+            if(!this.hiddenItems.isEmpty())
+                iIngredientManager.addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, this.hiddenItems);
+            if(!this.hiddenFluids.isEmpty())
+                iIngredientManager.addIngredientsAtRuntime(ForgeTypes.FLUID_STACK, this.hiddenFluids);
             this.hiddenItems.clear();
+            this.hiddenFluids.clear();
         } else if(CommonConfig.debugMode.get()) LOGGER.warn("There are no items available for restoring to the JEI ingredient list!");
     }
 
-    private void collectItems(IIngredientManager iIngredientManager) {
+    private void collectResources(IIngredientManager iIngredientManager) {
         if (jeiRuntime != null && iIngredientManager != null) {
             final Player player = Minecraft.getInstance().player;
             final IStagesData stageData = StageUtil.getPlayerData(player);
             try {
                 Registry.getRestrictionsHashSet().forEach((s) -> {
                     String stage = RestrictionsData.getRestrictionData(s).getData().getStage();
+                    assert stageData != null;
                     if (!stageData.hasStage(stage) && RestrictionsData.getRestrictionData(s).getSettingsCodec().getHideInJEI()) {
+
+                        //Collect fluids from fluid restriction list
+                        if (!getFluids(s).isEmpty()) {
+                            for (FluidStack allIngredient : iIngredientManager.getAllIngredients(ForgeTypes.FLUID_STACK)) {
+                                for (FluidRestriction fluid : getFluids(s)) {
+                                    if(fluid.getFluid() != null) {
+                                        if (allIngredient.getFluid().isSame(fluid.getFluid())) {
+                                            add(allIngredient);
+                                        }
+                                    }
+                                    else if(fluid.getTag() != null) {
+                                        if (allIngredient.getFluid().is(Objects.requireNonNull(ForgeRegistries.FLUIDS.tags()).createTagKey(fluid.getTag()))) {
+                                            add(allIngredient);
+                                        }
+                                    }
+                                    else if(fluid.getMod() != null) {
+                                        if (Objects.requireNonNull(ForgeRegistries.FLUIDS.getKey(allIngredient.getFluid())).getNamespace().equals(fluid.getMod())) {
+                                            add(allIngredient);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         //Collect ingredients from mod list
                         if (!getMods(s).isEmpty()) {
                             for (ItemStack itemStack : iIngredientManager.getAllIngredients(VanillaTypes.ITEM_STACK)) {
@@ -111,15 +148,24 @@ public class DecursioStagesJEI implements IModPlugin {
         } else if(CommonConfig.debugMode.get()) LOGGER.error("Couldn't collect items that are supposed to be hidden in JEI because JEIRuntime or IngredientManager ar missing! ");
     }
 
-    private void hideItems(IIngredientManager iIngredientManager) {
+    private void hideResources(IIngredientManager iIngredientManager) {
         if (!this.hiddenItems.isEmpty()) {
-            if(CommonConfig.debugMode.get()) LOGGER.info("Hiding the following items: " + this.hiddenItems);
+            if(CommonConfig.debugMode.get()) LOGGER.info("Hiding the following items: {}", this.hiddenItems);
             iIngredientManager.removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK, this.hiddenItems);
         } else if(CommonConfig.debugMode.get()) LOGGER.warn("The are no items that are supposed to be hidden in JEI");
+        if (!this.hiddenFluids.isEmpty())
+        {
+            if(CommonConfig.debugMode.get()) LOGGER.info("Hiding the following fluids: {}", this.hiddenFluids);
+            iIngredientManager.removeIngredientsAtRuntime(ForgeTypes.FLUID_STACK, this.hiddenFluids);
+        } else if(CommonConfig.debugMode.get()) LOGGER.warn("The are no fluids that are supposed to be hidden in JEI");
     }
 
     private void add(ItemStack itemStack) {
         this.hiddenItems.add(itemStack);
+    }
+
+    private void add(FluidStack fluidStack) {
+        this.hiddenFluids.add(fluidStack);
     }
 
     private void add(List<ItemStack> itemStacks) {

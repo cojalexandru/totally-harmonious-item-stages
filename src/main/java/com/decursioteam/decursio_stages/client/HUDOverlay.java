@@ -28,15 +28,13 @@ public class HUDOverlay {
         }
     }
 
-    // Handle game tick updates
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END && remainingTicks > 0) {
-            remainingTicks--; // Decrease remainingTicks every game tick (20 TPS)
+            remainingTicks--;
         }
     }
 
-    // Renders the custom message
     private static void renderCustomText(GuiGraphics guiGraphics, String text) {
         Minecraft mc = Minecraft.getInstance();
 

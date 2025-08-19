@@ -3,6 +3,8 @@ package com.decursioteam.decursio_stages.network;
 import com.decursioteam.decursio_stages.datagen.StagesData;
 import com.decursioteam.decursio_stages.datagen.utils.IStagesData;
 import com.decursioteam.decursio_stages.events.SyncStagesEvent;
+import com.decursioteam.decursio_stages.network.messages.OpenRestrictScreenMessage;
+import com.decursioteam.decursio_stages.network.messages.SaveRestrictionMessage;
 import com.decursioteam.decursio_stages.network.messages.SyncStagesMessage;
 import com.decursioteam.decursio_stages.utils.StagesHandler;
 import net.minecraft.network.FriendlyByteBuf;
@@ -13,19 +15,25 @@ import java.util.function.Supplier;
 
 public class ClientPacketHandler {
 
-    public static SyncStagesMessage decodeStageMessage (FriendlyByteBuf buffer) {
+    public static SyncStagesMessage decodeStageMessage(FriendlyByteBuf buffer) {
         final String[] stageNames = new String[buffer.readInt()];
 
         for (int i = 0; i < stageNames.length; i++) {
-
             stageNames[i] = buffer.readUtf(64);
         }
 
         return new SyncStagesMessage(stageNames);
     }
 
-    public static void processSyncStagesMessage (SyncStagesMessage message, Supplier<NetworkEvent.Context> context) {
+    public static OpenRestrictScreenMessage decodeOpenRestrictScreenMessage(FriendlyByteBuf buffer) {
+        return new OpenRestrictScreenMessage(buffer);
+    }
 
+    public static SaveRestrictionMessage decodeSaveRestrictionMessage(FriendlyByteBuf buffer) {
+        return new SaveRestrictionMessage(buffer);
+    }
+
+    public static void processSyncStagesMessage(SyncStagesMessage message, Supplier<NetworkEvent.Context> context) {
         final IStagesData clientData = new StagesData();
 
         for (final String stageName : message.getStages()) {
